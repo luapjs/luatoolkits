@@ -3,13 +3,15 @@
 -- Date : 2016-05-25 09:25
 -- Desc : base : 随机数值最大值 , isSeek 是否重置随机种子需要先引起(属于底层基础)
 -- math.random([n [, m]]) 无参调用,产生(0,1)之间的浮点随机数,只有参数n,产生1-n之间的整数.
-local os = os;
-local string_format = string.format;
+local os = os
+local string_format = string.format
+local table_insert = table.insert
+local table_concat = table.concat
 
-local math = math;
-local math_random = math.random;
-local math_randomseed = math.randomseed;
-local math_floor = math.floor;
+local math = math
+local math_random = math.random
+local math_randomseed = math.randomseed
+local math_floor = math.floor
 math.round = math.round or function(val)
 	local nVal = math_floor(val)
 	local fVal = val;
@@ -112,6 +114,17 @@ end
 function M.nextBool()
 	local _r = this.nextIntZero(2);
 	return _r == 1;
+end
+
+function M.nextStr(nlen,isSeek )
+	if isSeek == true then
+		this.onSeek();
+	end
+	local val = {};
+	for i=1,nlen do
+		table_insert(val,this.nextIntZero(10));
+	end
+	return table_concat(val,"");
 end
 
 return M;
