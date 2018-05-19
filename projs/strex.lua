@@ -18,22 +18,22 @@ local string_char = string.char
 local string_gmatch = string.gmatch
 
 local _htmlSpecialChars = {
-    ["&"] = "&amp;",
-    ["\""] = "&quot;",
-    ["'"] = "&#039;",
-    ["<"] = "&lt;",
-    [">"] = "&gt;",
-    ["\n"] = "<br />",
-    ["\t"] = "    ",
-    [" "] = "&nbsp;",
+    {"&","&amp;"},
+    {" ","&nbsp;"},
+    {"\t","    "},
+    {"\"","&quot;"},
+    {"'","&#039;"},
+    {"<","&lt;"},
+    {">","&gt;"},
+    {"\n","<br />"},
 }
 
 function string.toHtml(str,isRestroe)
-    for k, v in pairs(_htmlSpecialChars) do
+    for _, v in ipairs(_htmlSpecialChars) do
         if isRestroe == true then
-            str = string_gsub(str, v, k);
+            str = string_gsub(str, v[2], v[1]);
         else
-            str = string_gsub(str, k, v);
+            str = string_gsub(str, v[1], v[2]);
         end
     end
     return str;

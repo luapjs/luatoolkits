@@ -73,7 +73,7 @@ function table.removeValues( src,element,times )
     local _func = function ( item )
         return item == element;
     end
-    return table.removeValuesFunc( src,func,times )
+    return table.removeValuesFunc( src,_func,times )
 end
 
 function table.removeValuesFunc( src,func,times )
@@ -127,6 +127,7 @@ function table.merge(dest, src)
     for k, v in pairs(src) do
         dest[k] = v
     end
+    return dest;
 end
 
 function table.append(dest,src,begin)
@@ -139,6 +140,7 @@ function table.append(dest,src,begin)
     for i = 0, len - 1 do
         dest[i + begin] = src[i + 1]
     end
+    return dest;
 end
 
 function table.indexOf(array, value, begin)
@@ -152,7 +154,6 @@ function table.keyOf(src, value)
     for k, v in pairs(src) do
         if v == value then return k end
     end
-    return nil
 end
 
 function table.foreach(src, fnkv)
@@ -169,7 +170,7 @@ function table.foreach_new(src, fnkv)
     return _ret;
 end
 
-function table.filter(src, fn)
+function table.filter(src,fn)
     local n = {}
     for k, v in pairs(src) do
         if fn(v, k) then

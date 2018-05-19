@@ -3,9 +3,9 @@
 -- Date : 2018-05-18 10：25
 -- Desc : 重新整理一遍
 
-require("projs.numex")
-require("projs.strex")
-require("projs.tabex")
+require("projs/numex")
+require("projs/strex")
+require("projs/tabex")
 
 local _fmtColor = "<color=#%s>%s</color>";
 
@@ -17,6 +17,7 @@ local string_format = string.format
 local string_gsub = string.gsub
 local string_rep = string.rep
 local table_concat = table.concat
+local string_byte = string.byte
 
 function handler( obj, method )
     return function( ... )
@@ -41,6 +42,10 @@ local function _appendHeap( src )
 	return string_format("%s\n%s",src,debug.traceback());
 end
 
+local function _sort_key( a,b )
+	return string_byte(a) < string_byte(b);
+end
+
 function printTable( tb,title,notSort,rgb )
 	rgb = rgb or "09f68f";
 	if not tb or type(tb) ~= "table" then
@@ -57,7 +62,7 @@ function printTable( tb,title,notSort,rgb )
 			tabNum = tabNum + 1
 
 			local keys = table.keys(t);
-			if not notSort then table_sort(keys); end
+			if not notSort then table_sort(keys,_sort_key); end
 
 			local v,kk,ktp,vtp;
 			for _, k in pairs( keys ) do
@@ -98,7 +103,7 @@ function printTable( tb,title,notSort,rgb )
 		end
 
 		title = title or "table"
-		table_insert( str, string_format("\n----------begin[%s]----------[%s]", title, os.date("%H:%M:%S") )  )
+		table_insert( str, string_format("\n----------begin[%s]----------[%s]\n", title, os.date("%H:%M:%S") )  )
 		_printTable( tb )
 		table_insert( str, string_format("\n----------end  [%s]----------\n", title))
 
