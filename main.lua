@@ -57,9 +57,24 @@ function test_tab()
     printTable(src,"src")
 end
 
+function test_time_ex()
+    print(TimeEx.getCurrentTime())
+    print(TimeEx.getZeroTime())
+    print(TimeEx.getYyyyMMdd())
+    printTable(TimeEx.getDate(),"TimeEx.getDate()")
+
+    local ms = TimeEx.WEEK + TimeEx.HOUR * 3 + TimeEx.MINUTE * 5 + TimeEx.SECOND * 8;
+    print(TimeEx.getHMS(ms))
+    print(TimeEx.getDHMS(ms))
+    print("==========")
+    print(TimeEx.getHMSBySec(ms / 1000))
+    print(TimeEx.getDHMSBySec(ms / 1000))
+end
+
 function main()
     -- test_str_num();
     -- test_tab()
+    test_time_ex();
 end
 
 main()
