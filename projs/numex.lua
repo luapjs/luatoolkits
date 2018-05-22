@@ -45,7 +45,6 @@ end
 
 local M = {};
 local this = M;
-NumEx = this;
 
 function M.onSeek()
 	local _time = os.time();
@@ -126,5 +125,7 @@ function M.nextStr(nlen,isSeek )
 	end
 	return table_concat(val,"");
 end
+
+NumEx = this;
 
 return M;

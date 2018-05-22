@@ -6,6 +6,7 @@
 require("projs/numex")
 require("projs/strex")
 require("projs/tabex")
+require("projs/timeex")
 
 local _fmtColor = "<color=#%s>%s</color>";
 

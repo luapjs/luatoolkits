@@ -1,54 +1,104 @@
 --- 时间Ex
--- Anchor : Canyon
--- Time : 2016-06-02
+-- Anthor : canyon / 龚阳辉
+-- Date : 2016-05-25 09:25
+-- DeSc : 
 
-local _os = os;
+local os = os
+local os_time = os.time
+local os_date = os.date
+local os_difftime = os.difftime
+
+local math = math
+local math_round = math.round
+local math_floor = math.floor
 
 local M = {};
+local this = M;
 
--- 取得当前时间(单位:second)
-function M:getCurrentTime()
-  return self:getTimes();
-end
-
-function M:getCurrZero()
-  return self:getZeroTime(self:getCurrentTime());
-end
-
-function M:getTimes( year,month,day,hour,minute,second)
+function M.getTime( year,month,day,hour,minute,second)
   local date;
   if year or month or day or hour or minute or second then
     date = { year = year, month = month, day = day, hour = hour, min = minute, sec = second};
   end
   if date then
-    return _os.time(date);
+    return os_time(date);
   end
-  return _os.time();
+  return os_time();
 end
 
--- 当前时间的零点时间
-function M:getZeroTime( sec )
-  local date = self:format(sec,"*t");
-  return _os.time({ year = date.year, month = date.month, day = date.day, hour = 0 });
+-- 取得当前时间(单位:second)
+function M.getCurrentTime()
+  local _val = this.getTime() + this.DIFF_SEC;
+  return math_round(_val);
 end
 
-function M:format(sec,fmtStr)
-	sec = sec or self:getCurrentTime();
+-- 相差时间秒 = (t2-t1)
+function M.diffSec(t1Sec,t2Sec)
+  t2Sec = t2Sec or this.getCurrentTime();
+  return os_difftime(t2Sec,t1Sec);
+end
+
+function M.format(sec,fmtStr)
+	sec = sec or this.getCurrentTime();
 	fmtStr = fmtStr or "%Y%m%d";
-	return _os.date(fmtStr,sec);
+	return os_date(fmtStr,sec);
+end
+
+function M.getDate(sec)
+  sec = sec or this.getCurrentTime();
+  return this.format(sec,"*t");
+end
+
+-- 零点时间
+function M.getZeroTime( sec )
+  local date = this.getDate(sec);
+  return this.getTime(date.year,date.month,date.day);
 end
 
 -- 取得当前时间的yyyyMMdd
-function M:getYyyyMMdd()
-  return self:format();
+function M.getYyyyMMdd()
+  return this.format();
 end
 
--- 相差时间秒
-function M:diffSec(t1,t2)
-  t2 = t2 or self:getCurrentTime();
-  return _os.difftime(t2,t1);
+function M.setDiffSec( diffSec )
+  this.DIFF_SEC = diffSec or 0;
 end
 
-TimeEx = M;
+function M.getHMS( ms )
+  local hh,mm,ss = 0,0,0;
+  hh = math_floor( ms / this.HOUR );
+  
+  ms = ms % this.HOUR;
+  mm = math_floor( ms / this.MINUTE );
+
+  ms = ms % this.MINUTE;
+  ss = ms / this.SECOND;
+  return hh,mm,ss;
+end
+
+function M.getDHMS( ms )
+  local dd = math_floor( ms / this.DAY );
+
+  ms = ms % this.DAY;
+  local hh,mm,ss = this.getHMS(ms);
+  return dd,hh,mm,ss;
+end
+
+function M.getHMSBySec( sec )
+  return this.getHMS(sec * this.SECOND)
+end
+
+function M.getDHMSBySec( sec )
+  return this.getDHMS(sec * this.SECOND)
+end
+
+this.MS = 1;
+this.SECOND = this.MS * 1000;
+this.MINUTE = this.SECOND * 60;
+this.HOUR = this.MINUTE * 60;
+this.DAY = this.HOUR * 24;
+this.WEEK = this.DAY * 7;
+this.DIFF_SEC = 0; -- 相差时间(秒)
+TimeEx = this;
 
 return M;
