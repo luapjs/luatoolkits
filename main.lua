@@ -67,8 +67,12 @@ function test_time_ex()
     print(TimeEx.getHMS(ms))
     print(TimeEx.getDHMS(ms))
     print("==========")
-    print(TimeEx.getHMSBySec(ms / 1000))
-    print(TimeEx.getDHMSBySec(ms / 1000))
+    print(TimeEx.getHMSBySec(ms * TimeEx.TO_SECOND))
+    print(TimeEx.getDHMSBySec(ms * TimeEx.TO_SECOND))
+
+    printTable(TimeEx.getDate(TimeEx.addDay(1)),"addDay")
+    printTable(TimeEx.getDate(TimeEx.addMinue(10)),"addMinue")
+    printTable(TimeEx.getDate(TimeEx.addSecond(10)),"addSecond")
 end
 
 function main()

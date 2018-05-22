@@ -92,7 +92,23 @@ function M.getDHMSBySec( sec )
   return this.getDHMS(sec * this.SECOND)
 end
 
+function M.addDay( day,isZero )
+  local _val = (isZero == true) and this.getZeroTime() or this.getCurrentTime()
+  return _val + day * this.DAY * this.TO_SECOND;
+end
+
+function M.addMinue( minute,isZero )
+  local _val = (isZero == true) and this.getZeroTime() or this.getCurrentTime()
+  return _val + minute * this.MINUTE * this.TO_SECOND;
+end
+
+function M.addSecond( second,isZero )
+  local _val = (isZero == true) and this.getZeroTime() or this.getCurrentTime()
+  return _val + second;
+end
+
 this.MS = 1;
+this.TO_SECOND = 0.001;
 this.SECOND = this.MS * 1000;
 this.MINUTE = this.SECOND * 60;
 this.HOUR = this.MINUTE * 60;
