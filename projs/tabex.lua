@@ -10,6 +10,7 @@ local table_sort = table.sort
 local math = math;
 local math_max = math.max;
 local math_min = math.min;
+local math_random = math.random
 
 function table.lens(src)
     local count = 0
@@ -217,4 +218,31 @@ end
 function table.getSafeArrayValue( array,index )
     index = math_min(#array,math_max(index, 1));
     return array[ index ]
+end
+
+function table.shuffle(arrTab)
+    if arrTab == nil then
+        return
+    end
+    local _lens = #arrTab;
+    if _lens <= 1 then
+        return arrTab;
+    end
+    
+    local _tmp,_ret = {},{}
+    for i = 1,_lens do
+        table_insert(_tmp,i);
+    end
+
+    local _nVal,_nInd;
+    while _lens > 0 do
+        _nInd = math_random(_lens);
+        _nVal = _tmp[_nInd];
+        if _nVal and arrTab[_nVal] then
+            table_insert(_ret,arrTab[_nVal]);
+            table_remove(_tmp,_nInd);
+            _lens = #_tmp;
+        end
+    end
+    return _ret;
 end
