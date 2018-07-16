@@ -36,6 +36,7 @@ end
 
 function test_tab()
     local src = {"111","222",111,333,222,"666"};
+    --[[
     print(table.lens(src) .. "=,=" ..table.size(src))
     print(table.contains(src,111))
     print(table.contains_func(src,function(item) print(item) return item == 111; end))
@@ -54,7 +55,9 @@ function test_tab()
     print(table.keyOf(src,"6667"),"keyOf")
     printTable(table.filter(src,function(item) return item ~= 222 end),"filter")
     printTable(table.deepCopy(src,{["1"]=23}),"deepCopy")
+    --]]
     printTable(src,"src")
+    printTable(table.shuffle(src),"suffle")
 end
 
 function test_time_ex()
@@ -75,10 +78,27 @@ function test_time_ex()
     printTable(TimeEx.getDate(TimeEx.addSecond(10)),"addSecond")
 end
 
+function test_tool_ex()
+    local arr = {
+		{x = 1, y = 100},
+		{x = 2, y = 100},
+		{x = 1, y = 101},
+		{x = 2, y = 101},
+    }
+    local val = sortArrayByField(arr, {"x", "y"})
+    printTable(arr)
+    printTable(sortArrayByField(arr, {"x", "y"}))
+    printTable(sortArrayByField(arr, {"x", "-y"}))
+    printTable(sortArrayByField(arr, {"-x", "y"}))
+    printTable(sortArrayByField(arr, {"-x", "-y"}))
+    printTable(arr)
+end
+
 function main()
     -- test_str_num();
     -- test_tab()
-    test_time_ex();
+    -- test_time_ex();
+    -- test_tool_ex();
 end
 
 main()
