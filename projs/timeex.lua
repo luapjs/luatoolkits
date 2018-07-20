@@ -12,16 +12,23 @@ local math = math
 local math_round = math.round
 local math_floor = math.floor
 
+local _lbDTime = { year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0};
 local M = {};
 local this = M;
 
-function M.getTime( year,month,day,hour,minute,second)
-  local date;
-  if year or month or day or hour or minute or second then
-    date = { year = year, month = month, day = day, hour = hour, min = minute, sec = second};
-  end
-  if date then
-    return os_time(date);
+local function _ReDTime(year,month,day,hour,minute,second)
+  _lbDTime.year = year;
+  _lbDTime.month = month;
+  _lbDTime.day = day or 1;
+  _lbDTime.hour = hour or 0;
+  _lbDTime.min = minute or 0;
+  _lbDTime.sec = second or 0;
+  return _lbDTime;
+end
+
+function M.getTime( year,month,day,hour,minute,second )
+  if (year and month) and (day or hour or minute or second) then
+    return os_time(_ReDTime(year,month,day,hour,minute,second));
   end
   return os_time();
 end
