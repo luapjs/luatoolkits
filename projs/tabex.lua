@@ -145,7 +145,8 @@ function table.append(dest,src,begin)
 end
 
 function table.indexOf(array, value, begin)
-    for i = begin or 1, #array do
+    local _lens = #array
+    for i = begin or 1, _lens do
         if array[i] == value then return i end
     end
     return false
