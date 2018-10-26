@@ -17,8 +17,8 @@ local M = {};
 local this = M;
 
 local function _ReDTime(year,month,day,hour,minute,second)
-  _lbDTime.year = year;
-  _lbDTime.month = month;
+  _lbDTime.year = year or 2019;
+  _lbDTime.month = month or 1;
   _lbDTime.day = day or 1;
   _lbDTime.hour = hour or 0;
   _lbDTime.min = minute or 0;
