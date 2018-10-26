@@ -42,6 +42,7 @@ end
 -- 相差时间秒 = (t2-t1)
 function M.diffSec(t1Sec,t2Sec)
   t2Sec = t2Sec or this.getCurrentTime();
+  t1Sec = t1Sec or this.getZeroTime(t2Sec);
   return os_difftime(t2Sec,t1Sec);
 end
 
@@ -99,19 +100,31 @@ function M.getDHMSBySec( sec )
   return this.getDHMS(sec * this.SECOND)
 end
 
-function M.addDay( day,isZero )
+function M.addDHMS( day,hour,minute,second,isZero )
   local _val = (isZero == true) and this.getZeroTime() or this.getCurrentTime()
-  return _val + day * this.DAY * this.TO_SECOND;
+  _val = _val + ((day or 0) * this.DAY + (hour or 0) * this.HOUR + (minute or 0) * this.MINUTE + (second or 0) * this.SECOND) * this.TO_SECOND;
+  return _val;
+end
+
+function M.addDay( day,isZero )
+  return this.addDHMS(day,0,0,0,isZero);
+end
+
+function M.addHour( hour,isZero )
+  return this.addDHMS(0,hour,0,0,isZero);
 end
 
 function M.addMinue( minute,isZero )
-  local _val = (isZero == true) and this.getZeroTime() or this.getCurrentTime()
-  return _val + minute * this.MINUTE * this.TO_SECOND;
+  return this.addDHMS(0,0,minute,0,isZero);
 end
 
 function M.addSecond( second,isZero )
-  local _val = (isZero == true) and this.getZeroTime() or this.getCurrentTime()
-  return _val + second;
+  return this.addDHMS(0,0,0,second,isZero);
+end
+
+-- 与0点的时间差
+function M.getDiffZero( second )
+  return this.diffSec(nil,second);
 end
 
 this.MS = 1;
