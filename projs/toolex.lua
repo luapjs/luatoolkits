@@ -105,10 +105,10 @@ function printTable( tb,title,notSort,rgb )
 			end
 		end
 
-		title = title or "table"
-		table_insert( str, string_format("\n----------begin[%s]----------[%s]\n", title, os.date("%H:%M:%S") )  )
+		title = string_format("%s = %s",(title or ""),tb);
+		table_insert( str, string_format("\n====== beg [%s]------[%s]\n", title, os.date("%H:%M:%S") )  )
 		_printTable( tb )
-		table_insert( str, string_format("\n----------end  [%s]----------\n", title))
+		table_insert( str, string_format("\n====== end [%s]------\n", title))
 
 		title = table_concat(str, "")
 		title = string_format(_fmtColor,rgb,title)
