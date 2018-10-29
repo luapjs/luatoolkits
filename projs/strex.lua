@@ -94,6 +94,22 @@ function string.upfirst(inStr)
     return string_upper(string_sub(inStr, 1, 1)) .. string_sub(inStr, 2)
 end
 
+function string.lastIndexOf(inStr,sep)
+	if not sep or "" == sep or not inStr or "" == inStr then
+		return -1;
+	end
+	local _posLast = string_find(inStr,string_format("%s[^%s]*$",sep,sep));
+	return _posLast or -1;
+end
+
+function string.lastStr(inStr,sep)
+	local _posLast = string.lastIndexOf(inStr,sep)
+	if not _posLast or _posLast == -1 then
+		return inStr;
+	end
+	return string_gsub(inStr,string_sub(inStr, 1, _posLast),"");
+end
+
 -- 中文也是一个字符
 function string.utf8len(src)
     local len  = string_len(src)
