@@ -59,6 +59,7 @@ function printTable( tb,title,notSort,rgb )
 			return string_rep("    ", numTab);
 		end
 		local str = {};
+		local _dic,_str_temp = {};
 
 		local function _printTable( t )
 			table_insert( str, "{" )
@@ -77,14 +78,17 @@ function printTable( tb,title,notSort,rgb )
 				else
 					kk = "[" .. tostring(k) .. "]"
 				end
-				if vtp == "table" then
+				_str_temp = tostring(v)
+		
+				if (vtp == "table") and (not _dic[_str_temp]) then
+					_dic[_str_temp] = true;
 					table_insert( str, string_format('\n%s%s = ', stab(tabNum),kk))
 					_printTable( v )
 				else
 					if vtp == "string" then
 						vv = string_format("\"%s\"", v)
-					elseif vtp == "number" or vtp == "boolean" then
-						vv = tostring(v)
+					elseif vtp == "number" or vtp == "boolean" or vtp == "table" then
+						vv = _str_temp
 					else
 						vv = "[" .. vtp .. "]"
 					end
@@ -107,6 +111,8 @@ function printTable( tb,title,notSort,rgb )
 
 		title = string_format("%s = %s",(title or ""),tb);
 		table_insert( str, string_format("\n====== beg [%s]------[%s]\n", title, os.date("%H:%M:%S") )  )
+		_str_temp = tostring(tb)
+		_dic[_str_temp] = true;
 		_printTable( tb )
 		table_insert( str, string_format("\n====== end [%s]------\n", title))
 
