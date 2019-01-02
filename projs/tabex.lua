@@ -70,14 +70,22 @@ function table.values(src,sortFunc)
     return _keys_vals(src,sortFunc);
 end
 
-function table.removeValues( src,element,times )
-    local _func = function ( item )
-        return item == element;
-    end
-    return table.removeValuesFunc( src,_func,times )
+function lfc_equal( val,obj )
+    return val == obj;
 end
 
-function table.removeValuesFunc( src,func,times )
+function lfc_equalId( val,obj )
+    if type(obj) == "table" then
+        obj = obj.id;
+    end
+    return tostring(val.id) == tostring(obj);
+end
+
+function table.removeValues( src,element,times )
+    return table.removeValuesFunc( src,lfc_equal,element,times );
+end
+
+function table.removeValuesFunc( src,func,obj,times )
     times = tonum10(times,-1);
     local _lens = 0;
     if 0 ~= times and func and type(src) == "table" then
@@ -86,7 +94,7 @@ function table.removeValuesFunc( src,func,times )
             if times == 0 then
                 break;
             end
-            if func(v) then
+            if func(v,obj) then
                 times = times - 1;
                 table_insert(_lbRm,k);
             end
