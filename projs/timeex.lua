@@ -59,8 +59,8 @@ end
 
 -- 零点时间
 function M.getZeroTime( sec )
-  local date = this.getDate(sec);
-  return this.getTime(date.year,date.month,date.day);
+  local _dt = this.getDate(sec);
+  return this.getTime(_dt.year,_dt.month,_dt.day);
 end
 
 -- 取得当前时间的yyyyMMdd
@@ -68,10 +68,12 @@ function M.getYyyyMMdd()
   return this.format();
 end
 
+-- 服务器差值时间
 function M.setDiffSec( diffSec )
   this.DIFF_SEC = diffSec or 0;
 end
 
+-- 时分秒
 function M.getHMS( ms )
   local hh,mm,ss = 0,0,0;
   hh = math_floor( ms / this.HOUR );
@@ -84,6 +86,7 @@ function M.getHMS( ms )
   return hh,mm,ss;
 end
 
+-- 天时分秒
 function M.getDHMS( ms )
   local dd = math_floor( ms / this.DAY );
 
@@ -102,7 +105,7 @@ end
 
 function M.addDHMS( day,hour,minute,second,isZero )
   local _val = (isZero == true) and this.getZeroTime() or this.getCurrentTime()
-  _val = _val + ((day or 0) * this.DAY + (hour or 0) * this.HOUR + (minute or 0) * this.MINUTE + (second or 0) * this.SECOND) * this.TO_SECOND;
+  _val = _val + this.toSec((day or 0) * this.DAY + (hour or 0) * this.HOUR + (minute or 0) * this.MINUTE + (second or 0) * this.SECOND);
   return _val;
 end
 
@@ -125,6 +128,14 @@ end
 -- 与0点的时间差
 function M.getDiffZero( second )
   return this.diffSec(nil,second);
+end
+
+function M.toMS( sec )
+  return sec * this.SECOND
+end
+
+function M.toSec( ms )
+  return ms * this.TO_SECOND
 end
 
 this.MS = 1;
