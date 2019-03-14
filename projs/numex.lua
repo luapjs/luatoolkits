@@ -25,6 +25,11 @@ math.round = math.round or function(val)
 end
 local math_round = math.round
 
+bit_band = bit.band; -- 一个或多个无符号整数 '与 &' 运算 得到值
+bit_bor = bit.bor; -- 一个或多个无符号整数 '或 |' 运算 得到值
+bit_shl = bit.shl; -- 两个无符号整数,第一个参数是被移位的数，第二个参数是向左移动的位数
+bit_shr = bit.shr; -- 两个无符号整数,第一个参数是被移位的数，第二个参数是向右移动的位数
+
 function tonum(val,base,def)
 	base = base or 10;
 	def = def or 0;
@@ -124,6 +129,27 @@ function M.nextStr(nlen,isSeek )
 		table_insert(val,this.nextIntZero(10));
 	end
 	return table_concat(val,"");
+end
+
+function M.bitOr(n1,n2)
+	return bit_bor(n1,n2);
+end
+
+function M.bitAnd(n1,n2)
+	return bit_band(n1,n2);
+end
+
+function M.isBitAnd(n1,n2)
+	local _min = n1 > n2 and n2 or n1;
+	return this.bitAnd(n1,n2) == _min;
+end
+
+function M.bitLeft(org,pos)
+	return bit_shl(org,pos);
+end
+
+function M.bitRight(org,pos)
+	return bit_shr(org,pos);
 end
 
 NumEx = this;
