@@ -159,3 +159,8 @@ function string.toColRGB( str )
     end
     return unpack(_lb);
 end
+
+function string.isHasSpace(inStr)
+    local _isHas = string.contains(inStr,"[ \t\n\r　]");
+	return _isHas;
+end
