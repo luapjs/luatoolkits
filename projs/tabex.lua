@@ -81,6 +81,10 @@ function lfc_equalId( val,obj )
     return tostring(val.id) == tostring(obj);
 end
 
+function lfc_greater_than( a,b )
+    return a > b;
+end
+
 function table.removeValues( src,element,times )
     return table.removeValuesFunc( src,lfc_equal,element,times );
 end
@@ -102,9 +106,7 @@ function table.removeValuesFunc( src,func,obj,times )
 
         _lens = #_lbRm;
         if _lens > 0 then
-            table_sort(_lbRm,function ( a,b )
-                return a > b;
-            end);
+            table_sort(_lbRm,lfc_greater_than);
 
             for i=1,_lens do
                 table_remove(src,_lbRm[i]);
