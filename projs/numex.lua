@@ -152,6 +152,31 @@ function M.bitRight(org,pos)
 	return bit_shr(org,pos);
 end
 
+-- 求余数
+function M.modf(src,divisor)
+	if (src == nil or src == 0) or (divisor == nil or divisor == 0) then
+		return 0;
+	end
+	if src < divisor then
+		return src;
+	end
+	
+	local _fl = math_floor(src / divisor);
+	return src - (_fl * divisor);
+end
+
+-- 是否奇数
+function M.isOdd(src)
+	local _mf = this.modf(src,2);
+	return _mf == 1;
+end
+
+-- 是否偶数
+function M.isEven(src)
+	local _mf = this.modf(src,2);
+	return _mf == 0;
+end
+
 NumEx = this;
 
 return M;
