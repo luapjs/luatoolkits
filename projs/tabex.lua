@@ -37,10 +37,10 @@ function table.contains(src, element)
     return false
 end
 
-function table.contains_func(src, func)
+function table.contains_func(src, func,obj)
     if func and type(src) == "table" then
         for _,v in pairs(src) do
-            if func(v) then
+            if func(v,obj) then
                 return true;
             end
         end
