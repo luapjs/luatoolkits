@@ -257,3 +257,36 @@ function table.shuffle(arrTab)
     end
     return _ret;
 end
+
+local function _clear(src,isDeep)
+    local _lens,_tp = table.lens(src);
+	if _lens == 0 then
+		return src;
+	end
+	
+	for k,v in pairs(src) do
+		if k ~= "__index" then
+			_tp = type(v);
+			if _tp ~= "function" then
+				if _tp == "table" then
+					if isDeep == true then
+						_clear(v,isDeep);
+					else
+						src[k] = nil;
+					end
+				else
+					src[k] = nil;
+				end
+			end
+		end
+	end
+	return src;
+end
+
+function clearLT(src,isDeep)
+	return _clear(src,isDeep) 
+end
+
+function table.clear(src,isDeep)
+	return _clear(src,isDeep)
+end
