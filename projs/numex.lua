@@ -77,7 +77,7 @@ function M.nextFloat(base,isSeek)
 	return math_random() * base;
 end
 
--- 产生 : 小于base的两位小数
+-- 产生 : 小于base并保留npos位的小数
 function M.nextFloatPos(base,npos,isSeek)
 	local _f = this.nextFloat(base,isSeek);
 	return this.retainDecimal(_f,npos);
@@ -115,11 +115,13 @@ function M.nextNum( min,max,isSeek )
 	return math_random(min,max);
 end
 
+-- 随机 - bool值
 function M.nextBool()
 	local _r = this.nextIntZero(2);
 	return _r == 1;
 end
 
+-- [0-9]随机数连接的字符串长度nlen
 function M.nextStr(nlen,isSeek )
 	if isSeek == true then
 		this.onSeek();
@@ -144,10 +146,12 @@ function M.isBitAnd(n1,n2)
 	return this.bitAnd(n1,n2) == _min;
 end
 
+-- 左移
 function M.bitLeft(org,pos)
 	return bit_shl(org,pos);
 end
 
+-- 右移
 function M.bitRight(org,pos)
 	return bit_shr(org,pos);
 end
