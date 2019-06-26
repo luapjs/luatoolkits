@@ -290,3 +290,13 @@ end
 function table.clear(src,isDeep)
 	return _clear(src,isDeep)
 end
+
+function table.getKV(src,itKey,itVal)
+	if lbList and itKey and itVal then
+		for k, v in pairs( src ) do
+			if v[itKey] == itVal then
+				return k,v;
+			end
+		end
+	end
+end
