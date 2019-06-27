@@ -26,22 +26,22 @@ function table.size(src)
     return table.lens(src);
 end
 
-function table.contains(src, element)
+function table.contains(src,element)
     if element and type(src) == "table" then
-        for _,v in pairs(src) do
+        for k,v in pairs(src) do
             if v == element then
-                return true;
+				return true,k,v;
             end
         end
     end
     return false
 end
 
-function table.contains_func(src, func,obj)
+function table.contains_func(src,func,obj)
     if func and type(src) == "table" then
-        for _,v in pairs(src) do
+        for k,v in pairs(src) do
             if func(v,obj) then
-                return true;
+				return true,k,v;
             end
         end
     end
