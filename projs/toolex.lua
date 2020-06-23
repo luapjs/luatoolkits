@@ -11,16 +11,16 @@ require("projs/timeex")
 local _fmtColor = "<color=#%s>%s</color>";
 
 local table = table
-local table_insert = table.insert
-local table_sort = table.sort
-local table_keys = table.keys
-local table_lens = table.lens
+local tb_insert = table.insert
+local tb_sort = table.sort
+local tb_keys = table.keys
+local tb_lens = table.lens
+local tb_concat = table.concat
 
-local string_format = string.format
-local string_gsub = string.gsub
-local string_rep = string.rep
-local table_concat = table.concat
-local string_byte = string.byte
+local str_format = string.format
+local str_gsub = string.gsub
+local str_rep = string.rep
+local str_byte = string.byte
 
 function handler( obj, method )
     return function( ... )
@@ -42,31 +42,31 @@ function callFunc( funcName )
 end
 
 local function _appendHeap( src )
-	return string_format("%s\n%s",src,debug.traceback());
+	return str_format("%s\n%s",src,debug.traceback());
 end
 
 local function _sort_key( a,b )
-	return string_byte(a) < string_byte(b);
+	return str_byte(a) < str_byte(b);
 end
 
 function printTable( tb,title,notSort,rgb )
 	rgb = rgb or "09f68f";
 	if not tb or type(tb) ~= "table" then
-		title = string_format(_fmtColor,rgb,tb)
+		title = str_format(_fmtColor,rgb,tb)
 	else
 		local tabNum = 0;
 		local function stab( numTab )
-			return string_rep("    ", numTab);
+			return str_rep("    ", numTab);
 		end
 		local str = {};
 		local _dic,_str_temp = {};
 
 		local function _printTable( t )
-			table_insert( str, "{" )
+			tb_insert( str, "{" )
 			tabNum = tabNum + 1
 
-			local keys = table_keys(t);
-			if not notSort then table_sort(keys,_sort_key); end
+			local keys = tb_keys(t);
+			if not notSort then tb_sort(keys,_sort_key); end
 
 			local v,kk,ktp,vtp;
 			for _, k in pairs( keys ) do
@@ -82,11 +82,11 @@ function printTable( tb,title,notSort,rgb )
 		
 				if (vtp == "table") and (not _dic[_str_temp]) then
 					_dic[_str_temp] = true;
-					table_insert( str, string_format('\n%s%s = ', stab(tabNum),kk))
+					tb_insert( str, str_format('\n%s%s = ', stab(tabNum),kk))
 					_printTable( v )
 				else
 					if vtp == "string" then
-						vv = string_format("\"%s\"", v)
+						vv = str_format("\"%s\"", v)
 					elseif vtp == "number" or vtp == "boolean" or vtp == "table" then
 						vv = _str_temp
 					else
@@ -94,30 +94,30 @@ function printTable( tb,title,notSort,rgb )
 					end
 
 					if ktp == "string" then
-						table_insert( str, string_format("\n%s%-18s = %s,", stab(tabNum), kk, string_gsub(vv, "%%", "?") ) )
+						tb_insert( str, str_format("\n%s%-18s = %s,", stab(tabNum), kk, str_gsub(vv, "%%", "?") ) )
 					else
-						table_insert( str, string_format("\n%s%-4s = %s,", stab(tabNum), kk, string_gsub(vv, "%%", "?") ) )
+						tb_insert( str, str_format("\n%s%-4s = %s,", stab(tabNum), kk, str_gsub(vv, "%%", "?") ) )
 					end
 				end
 			end
 			tabNum = tabNum - 1
 
 			if tabNum == 0 then
-				table_insert( str, '}' )
+				tb_insert( str, '}' )
 			else
-				table_insert( str, '},' )
+				tb_insert( str, '},' )
 			end
 		end
 
-		title = string_format("%s = %s",(title or ""),tb);
-		table_insert( str, string_format("\n====== beg [%s]------[%s]\n", title, os.date("%H:%M:%S") )  )
+		title = str_format("%s = %s",(title or ""),tb);
+		tb_insert( str, str_format("\n====== beg [%s]------[%s]\n", title, os.date("%H:%M:%S") )  )
 		_str_temp = tostring(tb)
 		_dic[_str_temp] = true;
 		_printTable( tb )
-		table_insert( str, string_format("\n====== end [%s]------\n", title))
+		tb_insert( str, str_format("\n====== end [%s]------\n", title))
 
-		title = table_concat(str, "")
-		title = string_format(_fmtColor,rgb,title)
+		title = tb_concat(str, "")
+		title = str_format(_fmtColor,rgb,title)
 	end
 
 	title = _appendHeap(title);
@@ -129,7 +129,7 @@ function readonly( tb )
 	local _mt = {
 		__index = tb,
 		__newindex = function ( t,k,v )
-			error(string_format("[%s] is a read-only table",t.name or t),2);
+			error(str_format("[%s] is a read-only table",t.name or t),2);
 		end
 	}
 	setmetatable(_ret,_mt);
@@ -202,13 +202,13 @@ end
 local function _quickSort2(a,f)
 	local ka = {}
 	for k, v in pairs( a ) do
-		table_insert( ka, k )
+		tb_insert( ka, k )
 	end
 	local p = {}
 	p.a = a
 	p.ka = ka
 	p.h = 1
-	p.t = table_lens(ka)
+	p.t = tb_lens(ka)
 	p.f = f
 	_quickSortBase(p)
 	return ka
@@ -225,9 +225,9 @@ function sortArrayByField( array, fields )
 	local fieldConfig = {}
 	for _, v in pairs( fields ) do
 		if string.sub( v, 1, 1 ) == "-" then
-			table_insert( fieldConfig, { string.sub( v, 2, string.len( v ) ), true } )
+			tb_insert( fieldConfig, { string.sub( v, 2, string.len( v ) ), true } )
 		else
-			table_insert( fieldConfig, { v, false } )
+			tb_insert( fieldConfig, { v, false } )
 		end
 	end
 
@@ -258,7 +258,7 @@ function sortArrayByField( array, fields )
 	local keys = _quickSort2( array, sorter )
 
 	for _, v in pairs( keys ) do
-		table_insert( sortd, array[ v ] )
+		tb_insert( sortd, array[ v ] )
 	end
 
 	return sortd

@@ -3,9 +3,9 @@
 -- Date : 2015-05-25 09:25
 -- Desc : 
 local table = table;
-local table_insert = table.insert
-local table_remove = table.remove
-local table_sort = table.sort
+local tb_insert = table.insert
+local tb_remove = table.remove
+local tb_sort = table.sort
 
 local math = math;
 local math_max = math.max;
@@ -53,10 +53,10 @@ local function _keys_vals(src,sortFunc,isKey)
     if type(src) == "table" then
         isKey = isKey == true;
         for k,v in pairs(src) do
-            table_insert(_ret,isKey and k or v);
+            tb_insert(_ret,isKey and k or v);
         end
         if sortFunc and #_ret > 1 then
-            table_sort( _ret, sortFunc );
+            tb_sort( _ret, sortFunc );
         end
     end
     return _ret;
@@ -100,16 +100,16 @@ function table.removeValuesFunc( src,func,obj,times )
             end
             if func(v,obj) then
                 times = times - 1;
-                table_insert(_lbRm,k);
+                tb_insert(_lbRm,k);
             end
         end
 
         _lens = #_lbRm;
         if _lens > 0 then
-            table_sort(_lbRm,lfc_greater_than);
+            tb_sort(_lbRm,lfc_greater_than);
 
             for i=1,_lens do
-                table_remove(src,_lbRm[i]);
+                tb_remove(src,_lbRm[i]);
             end
         end
     end
@@ -120,7 +120,7 @@ function table.sub(src,nBegin,nEnd)
     local _ret = {};
     for i,v in ipairs(src) do
         if i >= nBegin and i <= nEnd then
-            table_insert(_ret,v);
+            tb_insert(_ret,v);
         end
     end
     return _ret;
@@ -242,7 +242,7 @@ function table.shuffle(arrTab)
     
     local _tmp,_ret = {},{}
     for i = 1,_lens do
-        table_insert(_tmp,i);
+        tb_insert(_tmp,i);
     end
 
     local _nVal,_nInd;
@@ -250,8 +250,8 @@ function table.shuffle(arrTab)
         _nInd = math_random(_lens);
         _nVal = _tmp[_nInd];
         if _nVal and arrTab[_nVal] then
-            table_insert(_ret,arrTab[_nVal]);
-            table_remove(_tmp,_nInd);
+            tb_insert(_ret,arrTab[_nVal]);
+            tb_remove(_tmp,_nInd);
             _lens = #_tmp;
         end
     end

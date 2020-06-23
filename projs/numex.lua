@@ -4,9 +4,9 @@
 -- Desc : base : 随机数值最大值 , isSeek 是否重置随机种子需要先引起(属于底层基础)
 -- math.random([n [, m]]) 无参调用,产生(0,1)之间的浮点随机数,只有参数n,产生1-n之间的整数.
 local os = os
-local string_format = string.format
-local table_insert = table.insert
-local table_concat = table.concat
+local str_format = string.format
+local tb_insert = table.insert
+local tb_concat = table.concat
 
 local math = math
 local math_random = math.random
@@ -62,7 +62,7 @@ function M.retainDecimal(v,fnum)
 	fnum = tonum10(fnum,2);
 	if fnum > 0 then
 		local fmt = "%.".. fnum .. "f"
-		v = string_format(fmt, v);
+		v = str_format(fmt, v);
 		v = tonum10(v);
 	end
 	return v;
@@ -128,9 +128,9 @@ function M.nextStr(nlen,isSeek )
 	end
 	local val = {};
 	for i=1,nlen do
-		table_insert(val,this.nextIntZero(10));
+		tb_insert(val,this.nextIntZero(10));
 	end
-	return table_concat(val,"");
+	return tb_concat(val,"");
 end
 
 function M.bitOr(n1,n2)
