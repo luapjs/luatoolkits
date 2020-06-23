@@ -136,6 +136,14 @@ function readonly( tb )
 	return _ret;
 end
 
+function reloadlua( fullName,isReLoad )
+	package.preload[fullName] = nil
+	package.loaded[fullName] = nil
+	if isReLoad == true then
+		require fullName;
+	end
+end
+
 ------ 排序相关 -----
 local function _quickSortBase(p)
 	if p == nil or p.h >= p.t then return end
