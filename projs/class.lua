@@ -12,6 +12,7 @@ _setmetatableindex = function(t, index)
 end
 setmetatableindex = _setmetatableindex
 
+local str_format = string.format
 function clone(object)
     local lookup = {}
     local function _copy(object)
@@ -37,21 +38,18 @@ function class(classname, ...)
     for _, super in ipairs(supers) do
         local superType = type(super)
         assert(superType == "nil" or superType == "table" or superType == "function",
-            string.format("class() - create class \"%s\" with invalid super class type \"%s\"",
-                classname, superType))
+            str_format("class() - create class \"%s\" with invalid super class type \"%s\"",classname, superType));
 
         if superType == "function" then
             assert(cls.__create == nil,
-                string.format("class() - create class \"%s\" with more than one creating function",
-                    classname));
+                str_format("class() - create class \"%s\" with more than one creating function",classname));
             -- if super is function, set it to __create
             cls.__create = super
         elseif superType == "table" then
             if super[".isclass"] then
                 -- super is native class
                 assert(cls.__create == nil,
-                    string.format("class() - create class \"%s\" with more than one creating function or native class",
-                        classname));
+                    str_format("class() - create class \"%s\" with more than one creating function or native class",classname));
                 cls.__create = function() return super:create() end
             else
                 -- super is pure lua class
@@ -63,8 +61,7 @@ function class(classname, ...)
                 end
             end
         else
-            error(string.format("class() - create class \"%s\" with invalid super type",
-                        classname), 0)
+            error(str_format("class() - create class \"%s\" with invalid super type",classname),0)
         end
     end
 
