@@ -149,7 +149,7 @@ end
 function string.toColRGB( str )
     str = string_gsub(str,"#","");
     local _lens = #str;
-    if _lens ~= 6 then
+    if _lens ~= 6 and _lens ~= 8 then
         return 0,0,0;
     end
 

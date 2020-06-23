@@ -292,7 +292,7 @@ function table.clear(src,isDeep)
 end
 
 function table.getKV(src,itKey,itVal)
-	if lbList and itKey and itVal then
+	if src and itKey and itVal then
 		for k, v in pairs( src ) do
 			if v[itKey] == itVal then
 				return k,v;
