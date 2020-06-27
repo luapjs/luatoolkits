@@ -1,5 +1,5 @@
 --- 时间Ex
--- Anthor : canyon / 龚阳辉
+-- Author : canyon / 龚阳辉
 -- Date : 2016-05-25 09:25
 -- DeSc : 
 

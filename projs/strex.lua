@@ -1,5 +1,5 @@
 --- 字符串
--- Anthor : canyon / 龚阳辉
+-- Author : canyon / 龚阳辉
 -- Date : 2016-05-25 09:25
 -- Desc : 重新整理一遍
 

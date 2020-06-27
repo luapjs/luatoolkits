@@ -1,5 +1,5 @@
 --- lua table 对象
--- Anthor : canyon / 龚阳辉
+-- Author : canyon / 龚阳辉
 -- Date : 2015-05-25 09:25
 -- Desc : 
 local table = table;

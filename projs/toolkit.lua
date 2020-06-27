@@ -1,5 +1,5 @@
 --- 工具
--- Anthor : canyon / 龚阳辉
+-- Author : canyon / 龚阳辉
 -- Date : 2018-05-18 10：25
 -- Desc : 重新整理一遍
 
