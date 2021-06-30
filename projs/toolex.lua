@@ -21,10 +21,82 @@ local str_format = string.format
 local str_gsub = string.gsub
 local str_rep = string.rep
 local str_byte = string.byte
+local tostring = tostring
+
+local package,type,rawget = package,type,rawget
+local _pcall,_xpcall,_deTrk = pcall,xpcall,debug.traceback
+local _print,_printError = print
+
+local _unpack = unpack or table.unpack
+function unpack( arg )
+	if _unpack and type(arg) == "table" then
+		return _unpack(arg)
+	end
+end
+
+function setPErrorFunc( pErrorFunc )
+	_printError = pErrorFunc
+end
+
+function executeCallFunc(lfunc,lbObject,...)
+	if not lfunc then return end
+	if lbObject then
+		lfunc( lbObject,... )
+	else
+		lfunc( ... )
+	end
+end
+
+function do_pcall( isLog,method,obj,... )
+	local _ok,_err
+	if obj then
+		_ok,_err = _pcall( method,obj,... )
+	else
+		_ok,_err = _pcall( method,... )
+	end
+	if (not _ok) and (isLog == true) and _printError then
+		_printError("====[%s].[%s] , error = %s",obj,method,_err)
+	end
+	return _ok,_err
+end
+
+function exc_pcall( method,obj,... )
+	return do_pcall( true,method,obj,... )
+end
+
+function do_xpcall( isLog,method,obj,... )
+	local _ok,_err
+	if obj then
+		_ok,_err = _xpcall( method,_deTrk,obj,... )
+	else
+		_ok,_err = _xpcall( method,_deTrk,... )
+	end
+
+	if (not _ok) and (isLog == true) and _printError then
+		_printError("====[%s].[%s] , error = %s",obj,method,_err)
+	end
+	return _ok,_err
+end
+
+function exc_xpcall( method,obj,... )
+	return do_xpcall( true,method,obj,... )
+end
 
 function handler( obj, method )
     return function( ... )
         return method( obj, ... )
+    end
+end
+
+function handler_pcall( obj, method )
+	return function( ... )
+		exc_pcall( method,obj,... )
+    end
+end
+
+function handler_xpcall( obj, method )
+	return function( ... )
+		exc_xpcall( method,obj,... )
     end
 end
 
@@ -42,105 +114,156 @@ function callFunc( funcName )
 end
 
 local function _appendHeap( src )
-	return str_format("%s\n%s",src,debug.traceback());
+	return str_format("%s\n%s",src,_deTrk());
 end
 
-local function _sort_key( a,b )
+function sort_key( a,b )
 	return str_byte(a) < str_byte(b);
 end
 
-function printTable( tb,title,notSort,rgb )
+local _pfunc = nil;
+function setPTabFunc( pfunc )
+	_pfunc = pfunc;
+end
+
+local function stab( numTab )
+	return str_rep("    ", numTab);
+end
+
+local function _ToCatTable( tb,dest,dic,tabNum,notSort )
+	tb_insert( dest, "{" )
+	tabNum = tabNum + 1
+
+	local keys = tb_keys( tb );
+	if not notSort then tb_sort(keys,sort_key); end
+
+	local v,vv,kk,ktp,vtp,_str_temp;
+	for _, k in pairs( keys ) do
+		v = tb[ k ]
+		ktp = type(k)
+		vtp = type(v)
+		if ktp == "string" then
+			kk = "['" .. k .. "']"
+		else
+			kk = "[" .. tostring(k) .. "]"
+		end
+		_str_temp = tostring(v)
+
+		if (vtp == "table") and (not dic[_str_temp]) then
+			dic[_str_temp] = true;
+			tb_insert( dest, str_format('\n%s%s = ', stab(tabNum),kk))
+			_ToCatTable( v,dest,dic,tabNum,notSort )
+		else
+			if vtp == "string" then
+				vv = str_format("\"%s\"", v)
+			elseif vtp == "number" or vtp == "boolean" or vtp == "table" then
+				vv = _str_temp
+			else
+				vv = "[" .. vtp .. "]"
+			end
+
+			if ktp == "string" then
+				tb_insert( dest, str_format("\n%s%-18s = %s,", stab(tabNum), kk, str_gsub(vv, "%%", "?") ) )
+			else
+				tb_insert( dest, str_format("\n%s%-4s = %s,", stab(tabNum), kk, str_gsub(vv, "%%", "?") ) )
+			end
+		end
+	end
+	tabNum = tabNum - 1
+
+	if tabNum == 0 then
+		tb_insert( dest, '}' )
+	else
+		tb_insert( dest, '},' )
+	end
+end
+
+function reTable( tb,dest,dic,notSort )
+	dic = dic or {}
+	dest = dest or {};
+	_ToCatTable( tb,dest,dic,0,notSort )
+	return dest
+end
+
+function reTable2Str( tb,cat,dest,dic,notSort )
+	local _ret = reTable( tb,dest,dic,notSort )
+	cat = cat or ""
+	return tb_concat(_ret, cat)
+end
+
+function printTable( tb,title,rgb,notSort )
 	rgb = rgb or "09f68f";
 	if not tb or type(tb) ~= "table" then
 		title = str_format(_fmtColor,rgb,tb)
 	else
-		local tabNum = 0;
-		local function stab( numTab )
-			return str_rep("    ", numTab);
-		end
-		local str = {};
-		local _dic,_str_temp = {};
-
-		local function _printTable( t )
-			tb_insert( str, "{" )
-			tabNum = tabNum + 1
-
-			local keys = tb_keys(t);
-			if not notSort then tb_sort(keys,_sort_key); end
-
-			local v,kk,ktp,vtp;
-			for _, k in pairs( keys ) do
-				v = t[ k ]
-				ktp = type(k)
-				vtp = type(v)
-				if ktp == "string" then
-					kk = "['" .. k .. "']"
-				else
-					kk = "[" .. tostring(k) .. "]"
-				end
-				_str_temp = tostring(v)
-		
-				if (vtp == "table") and (not _dic[_str_temp]) then
-					_dic[_str_temp] = true;
-					tb_insert( str, str_format('\n%s%s = ', stab(tabNum),kk))
-					_printTable( v )
-				else
-					if vtp == "string" then
-						vv = str_format("\"%s\"", v)
-					elseif vtp == "number" or vtp == "boolean" or vtp == "table" then
-						vv = _str_temp
-					else
-						vv = "[" .. vtp .. "]"
-					end
-
-					if ktp == "string" then
-						tb_insert( str, str_format("\n%s%-18s = %s,", stab(tabNum), kk, str_gsub(vv, "%%", "?") ) )
-					else
-						tb_insert( str, str_format("\n%s%-4s = %s,", stab(tabNum), kk, str_gsub(vv, "%%", "?") ) )
-					end
-				end
-			end
-			tabNum = tabNum - 1
-
-			if tabNum == 0 then
-				tb_insert( str, '}' )
-			else
-				tb_insert( str, '},' )
-			end
-		end
-
+		local str,_dic,_str_temp = {},{};
 		title = str_format("%s = %s",(title or ""),tb);
-		tb_insert( str, str_format("\n====== beg [%s]------[%s]\n", title, os.date("%H:%M:%S") )  )
+		tb_insert( str, str_format("\n=== beg [%s]--[%s]\n", title, os.date("%H:%M:%S") )  )
 		_str_temp = tostring(tb)
 		_dic[_str_temp] = true;
-		_printTable( tb )
-		tb_insert( str, str_format("\n====== end [%s]------\n", title))
+		
+		str = reTable( tb,str,_dic,notSort )
+
+		tb_insert( str, str_format("\n=== end [%s]--\n", title))
 
 		title = tb_concat(str, "")
 		title = str_format(_fmtColor,rgb,title)
 	end
 
-	title = _appendHeap(title);
-	print(title)
+	if type(_pfunc) == "function" then
+		_pfunc(title)
+	else
+		title = _appendHeap(title)
+		_print(title)
+	end
+end
+
+local function _lfNewIndex ( t,k,v )
+	error(str_format("[%s] is a read-only table",t.name or t),2);
 end
 
 function readonly( tb )
+	if type(tb) ~= "table" then
+		return tb
+	end
 	local _ret = {};
 	local _mt = {
 		__index = tb,
-		__newindex = function ( t,k,v )
-			error(str_format("[%s] is a read-only table",t.name or t),2);
-		end
+		__newindex = _lfNewIndex,
 	}
 	setmetatable(_ret,_mt);
 	return _ret;
 end
 
+function extends( src,parent )
+	setmetatable(src,{__index = parent});
+	return src;
+end
+
+function weakTB( weakKey,objIndex )
+	if weakKey ~= "k" and weakKey ~= "v" and weakKey ~= "kv" then
+		weakKey = "v"
+	end
+	return setmetatable({},{ __mode = weakKey,__index = objIndex })
+end
+
+function clearLoadLua( luapath )
+	package.preload[luapath] = nil	
+	package.loaded[luapath] = nil
+end
+
+if not reimport then
+	--重新require一个lua文件，替代系统文件。
+	function reimport(name)
+		clearLoadLua(name)
+		return require(name)    
+	end
+end
+
 function reloadlua( fullName,isReLoad )
-	package.preload[fullName] = nil
-	package.loaded[fullName] = nil
+	clearLoadLua( fullName )
 	if isReLoad == true then
-		require fullName;
+		return require fullName
 	end
 end
 
@@ -270,4 +393,29 @@ function sortArrayByField( array, fields )
 	end
 
 	return sortd
+end
+
+-- lensPars
+function lens4Variable( ... )
+	return select( '#', ... )
+end
+
+function cs_arrs_len( arrs )
+	if not arrs then return 0 end
+	return arrs.Length
+end
+
+function cs_arrs_val( arrs,nIndex )
+	local _nlens = cs_arrs_len( arrs )
+	if _nlens <= 0 or _nlens <= nIndex then return end
+	return arrs[nIndex]
+end
+
+function cs_foreach_arrs( arrs,lfeach )
+	local _nlens = cs_arrs_len( arrs )
+	for i = 0,_nlens - 1 do
+		if lfeach then
+			lfeach(arrs[i],i)
+		end
+	end
 end

@@ -2,7 +2,7 @@
 -- Author : canyon / 龚阳辉
 -- Date : 2015-05-25 09:25
 -- Desc : 
-local table = table;
+local table,type,tostring = table,type,tostring;
 local tb_insert = table.insert
 local tb_remove = table.remove
 local tb_sort = table.sort
@@ -12,7 +12,28 @@ local math_max = math.max;
 local math_min = math.min;
 local math_random = math.random
 
+-- 取数组长度
 function table.lens(src)
+    local count = 0
+    if type(src) == "table" then
+        count = #src  -- # 官方解释，取非队列数组的对象的长度不固定的
+    end
+    return count
+end
+
+-- 取数组长度
+function table.lens2(src)
+    local count = 0
+    if type(src) == "table" then
+        for _,_ in ipairs(src) do
+            count = count + 1;
+        end
+    end
+    return count
+end
+
+-- 取对象长度
+function table.size(src)
     local count = 0
     if type(src) == "table" then
         for _,_ in pairs(src) do
@@ -22,8 +43,13 @@ function table.lens(src)
     return count
 end
 
-function table.size(src)
-    return table.lens(src);
+function table.end_arr(src,nEnd)
+    if type(src) == "table" then
+        local _lens = #src
+        nEnd = (nEnd ~= nil) and (_lens + nEnd) or _lens
+        if nEnd >= _lens then nEnd = _lens end
+        return src[nEnd]
+    end
 end
 
 function table.contains(src,element)
@@ -46,6 +72,10 @@ function table.contains_func(src,func,obj)
         end
     end
     return false
+end
+
+function table.contains_id(src,obj)
+    return table.contains_func(src,lfc_equalId,obj)
 end
 
 local function _keys_vals(src,sortFunc,isKey)
@@ -168,24 +198,30 @@ function table.keyOf(src, value)
     end
 end
 
-function table.foreach(src, fnkv)
+function table.foreach(src, fnvk)
     for k, v in pairs(src) do
-        fnkv(k,v);
+        fnvk(v,k);
     end
 end
 
-function table.foreach_new(src, fnkv)
+function table.foreachArrs(src, fnvk)
+    for k, v in ipairs(src) do
+        fnvk(v,k);
+    end
+end
+
+function table.foreach_new(src, fnvk)
     local _ret = {}
     for k, v in pairs(src) do
-        _ret[k] = fnkv(k,v);
+        _ret[k] = fnvk(v,k);
     end
     return _ret;
 end
 
-function table.filter(src,fn)
+function table.filter(src,fnvk)
     local n = {}
     for k, v in pairs(src) do
-        if fn(v, k) then
+        if fnvk(v, k) then
             n[k] = v
         end
     end
@@ -259,7 +295,7 @@ function table.shuffle(arrTab)
 end
 
 local function _clear(src,isDeep)
-    local _lens,_tp = table.lens(src);
+    local _lens,_tp = table.size(src);
 	if _lens == 0 then
 		return src;
 	end
@@ -291,12 +327,41 @@ function table.clear(src,isDeep)
 	return _clear(src,isDeep)
 end
 
-function table.getKV(src,itKey,itVal)
+function table.getVK(src,itKey,itVal)
 	if src and itKey and itVal then
 		for k, v in pairs( src ) do
 			if v[itKey] == itVal then
-				return k,v;
+				return v,k;
 			end
 		end
 	end
+end
+
+function table.getVK4Arr(src,itKey,itVal)
+	if src and itKey and itVal then
+		for k, v in ipairs( src ) do
+			if v[itKey] == itVal then
+				return v,k;
+			end
+		end
+	end
+end
+
+-- 交集
+function table.intersection(t1,t2)
+    local dest = t1 or t2
+    local src = (dest == t1) and t2 or t1
+	if src then
+        dest = dest or {}
+        local _ret = {}
+		for _, v1 in pairs( src ) do
+            for _, v2 in pairs( dest ) do
+                if v2 == v1 then
+                    tb_insert( _ret,v2 )
+                end
+			end
+		end
+        return _ret
+    end
+    return dest
 end
