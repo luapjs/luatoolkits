@@ -118,6 +118,8 @@ local function _appendHeap( src )
 end
 
 function sort_key( a,b )
+	a = tostring(a)
+	b = tostring(b)
 	return str_byte(a) < str_byte(b);
 end
 
@@ -135,7 +137,7 @@ local function _ToCatTable( tb,dest,dic,tabNum,notSort )
 	tabNum = tabNum + 1
 
 	local keys = tb_keys( tb );
-	if not notSort then tb_sort(keys,sort_key); end
+	if (not notSort) then tb_sort(keys,sort_key); end
 
 	local v,vv,kk,ktp,vtp,_str_temp;
 	for _, k in pairs( keys ) do
@@ -247,9 +249,9 @@ function weakTB( weakKey,objIndex )
 	return setmetatable({},{ __mode = weakKey,__index = objIndex })
 end
 
-function clearLoadLua( luapath )
-	package.preload[luapath] = nil	
+function clearLoadLua( luapath )	
 	package.loaded[luapath] = nil
+	package.preload[luapath] = nil
 end
 
 if not reimport then

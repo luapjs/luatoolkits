@@ -70,6 +70,8 @@ function string.split(inStr,sep,sepType,useType)
         sep = "([^"..sep.."]+)";
     elseif sepType == 1 then
         sep = "[^"..sep.."]+";
+    elseif sepType == 2 then
+        sep = "(.*)"..sep.."(.*)"; -- 固定分隔k,v模式
     end
 
     if useType == 1 then
@@ -84,8 +86,11 @@ function string.split(inStr,sep,sepType,useType)
             tb_insert(_lt,w)
         end)
     else
-        for str in str_gmatch(inStr, sep) do
+        for str,str2 in str_gmatch(inStr, sep) do
             tb_insert(_lt,str);
+            if (sepType == 2) and str2 then
+                tb_insert(_lt,str2);
+            end
         end
     end
 

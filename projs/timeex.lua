@@ -63,6 +63,21 @@ function M.getZeroTime( sec )
   return this.getTime(_dt.year,_dt.month,_dt.day);
 end
 
+--当周周一0点时间
+function M.getZeroTimeOfWeek(time)
+    time = time or this.getCurrentTime()
+    local t = os_date("*t", time)
+    t.sec = 0
+    t.hour = 0
+    t.min = 0
+    if t.wday == 1 then
+        t.day = t.day - 6
+    else
+        t.day = t.day + 2 - t.wday
+    end
+    return os_time(t)
+end
+
 -- 取得当前时间的yyyyMMdd
 function M.getYyyyMMdd()
   return this.format();
