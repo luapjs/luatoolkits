@@ -351,6 +351,12 @@ local function checkstring(str)
     return str
 end
 
+function string.sort(a, b)
+    a = tostring(a);
+    b = tostring(b);
+    return str_byte(a) < str_byte(b);
+end
+
 function string.toHtml(str, isRestroe)
     for _, v in ipairs(_htmlSpecialChars) do
         if isRestroe == true then
@@ -705,17 +711,16 @@ function TimeEx.getDHMSBySec(sec) return tTEx.getDHMS(sec * tTEx.SECOND); end
 function TimeEx.addDHMS(day, hour, minute, second, isZero)
     local _val = (isZero == true) and tTEx.getZeroTime() or
                      tTEx.getCurrentTime();
-    _val = _val + tTEx.toSec(
-               (day or 0) * tTEx.DAY + (hour or 0) * tTEx.HOUR +
-                   (minute or 0) * tTEx.MINUTE + (second or 0) * tTEx.SECOND);
+    _val = _val +
+               tTEx.toSec(
+                   (day or 0) * tTEx.DAY + (hour or 0) * tTEx.HOUR +
+                       (minute or 0) * tTEx.MINUTE + (second or 0) * tTEx.SECOND);
     return _val;
 end
 
 function TimeEx.addDay(day, isZero) return tTEx.addDHMS(day, 0, 0, 0, isZero); end
 
-function TimeEx.addHour(hour, isZero)
-    return tTEx.addDHMS(0, hour, 0, 0, isZero);
-end
+function TimeEx.addHour(hour, isZero) return tTEx.addDHMS(0, hour, 0, 0, isZero); end
 
 function TimeEx.addMinue(minute, isZero)
     return tTEx.addDHMS(0, 0, minute, 0, isZero);
@@ -954,3 +959,46 @@ function NumEx.isEven(src)
     local _mf = tNEx.modf(src, 2);
     return _mf == 0;
 end
+
+--[[
+-- 常规函数
+-- Author : canyon / 龚阳辉
+-- Date : 2015-05-25 09:25
+--]]
+local package, _require, setmetatable = package, require, setmetatable
+local select = select
+function clearLoadLua(luapath)
+    package.loaded[luapath] = nil;
+    package.preload[luapath] = nil;
+end
+
+function requireOriginal(name) return _require(name); end
+-- function require(name) return _require(name); end
+
+function reimport(name)
+    clearLoadLua(name);
+    return _require(name);
+end
+
+local function _lfNewIndex(t, k, v)
+    error(str_format("[%s] is a read-only table , key = [%s] , val = [%s]",
+                     t.name or t, tostring(k), tostring(v)), 2);
+end
+
+function readonly(tb)
+    if type(tb) ~= "table" then return tb end
+    local _ret = {};
+    local _mt = {__index = tb, __newindex = _lfNewIndex};
+    return setmetatable(_ret, _mt);
+end
+
+function extends(src, parent) return setmetatable(src, {__index = parent}); end
+
+function weakTB(weakKey, objIndex)
+    if weakKey ~= "k" and weakKey ~= "v" and weakKey ~= "kv" then
+        weakKey = "v";
+    end
+    return setmetatable({}, {__mode = weakKey, __index = objIndex});
+end
+
+function lens4Variable(...) return select('#', ...); end
