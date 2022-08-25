@@ -2,9 +2,8 @@
 -- lua 的扩展脚本
 -- Author : canyon / 龚阳辉
 -- Date : 2015-05-25 09:25
--- Desc : table,string,os,number
---]] 
-
+-- Desc : table,string,os's TimeEx,number's NumEx
+--]] --
 local tonumber, tostring, type = tonumber, tostring, type
 local error = error
 
@@ -53,6 +52,10 @@ local str_gmatch = string.gmatch
 -- Author : canyon / 龚阳辉
 -- Date : 2015-05-25 09:25
 --]]
+local _unpack = unpack or table.unpack
+function unpack(arg)
+    if _unpack and type(arg) == "table" then return _unpack(arg) end
+end
 -- 取数组长度
 function table.lens(src)
     local count = 0
@@ -122,9 +125,7 @@ local function _keys_vals(src, sortFunc, isKey)
 end
 
 function table.keys(src, sortFunc) return _keys_vals(src, sortFunc, true); end
-
 function table.values(src, sortFunc) return _keys_vals(src, sortFunc); end
-
 function lfc_equal(val, obj) return val == obj; end
 
 function lfc_equalId(val, obj)
@@ -414,9 +415,7 @@ function string.ends(src, send)
 end
 
 function string.replace(inStr, pat, val) return str_gsub(inStr, pat, val); end
-
 function string.ltrim(inStr) return str_gsub(inStr, "^[ \t\n\r]+", "") end
-
 function string.rtrim(inStr) return str_gsub(inStr, "[ \t\n\r]+$", "") end
 
 function string.trim(inStr)
@@ -608,6 +607,7 @@ TimeEx = {
     WEEK = 604800000,
     DIFF_SEC = 0 -- 相差时间(秒)
 };
+local tTEx = TimeEx;
 
 local function _ReDTime(year, month, day, hour, minute, second)
     _lbDTime.year = year or 2019;
@@ -628,37 +628,37 @@ end
 
 -- 取得当前时间(单位:second)
 function TimeEx.getCurrentTime()
-    local _val = TimeEx.getTime() + TimeEx.DIFF_SEC;
+    local _val = tTEx.getTime() + tTEx.DIFF_SEC;
     return m_round(_val);
 end
 
 -- 相差时间秒 = (t2-t1)
 function TimeEx.diffSec(t1Sec, t2Sec)
-    t2Sec = t2Sec or TimeEx.getCurrentTime();
-    t1Sec = t1Sec or TimeEx.getZeroTime(t2Sec);
+    t2Sec = t2Sec or tTEx.getCurrentTime();
+    t1Sec = t1Sec or tTEx.getZeroTime(t2Sec);
     return os_difftime(t2Sec, t1Sec);
 end
 
 function TimeEx.format(sec, fmtStr)
-    sec = sec or TimeEx.getCurrentTime();
+    sec = sec or tTEx.getCurrentTime();
     fmtStr = fmtStr or "%Y%m%d";
     return os_date(fmtStr, sec);
 end
 
 function TimeEx.getDate(sec)
-    sec = sec or TimeEx.getCurrentTime();
-    return TimeEx.format(sec, "*t");
+    sec = sec or tTEx.getCurrentTime();
+    return tTEx.format(sec, "*t");
 end
 
 -- 零点时间
 function TimeEx.getZeroTime(sec)
-    local _dt = TimeEx.getDate(sec);
-    return TimeEx.getTime(_dt.year, _dt.month, _dt.day);
+    local _dt = tTEx.getDate(sec);
+    return tTEx.getTime(_dt.year, _dt.month, _dt.day);
 end
 
 -- 当周周一0点时间
 function TimeEx.getZeroTimeOfWeek(sec)
-    sec = sec or TimeEx.getCurrentTime()
+    sec = sec or tTEx.getCurrentTime()
     local t = os_date("*t", sec)
     t.sec = 0
     t.hour = 0
@@ -672,66 +672,63 @@ function TimeEx.getZeroTimeOfWeek(sec)
 end
 
 -- 取得当前时间的yyyyMMdd
-function TimeEx.getYyyyMMdd() return TimeEx.format(); end
+function TimeEx.getYyyyMMdd() return tTEx.format(); end
 
 -- 服务器差值时间
-function TimeEx.setDiffSec(diffSec) TimeEx.DIFF_SEC = diffSec or 0; end
+function TimeEx.setDiffSec(diffSec) tTEx.DIFF_SEC = diffSec or 0; end
 
 -- 时分秒
 function TimeEx.getHMS(ms)
     local hh, mm, ss = 0, 0, 0;
-    hh = m_floor(ms / TimeEx.HOUR);
+    hh = m_floor(ms / tTEx.HOUR);
 
-    ms = ms % TimeEx.HOUR;
-    mm = m_floor(ms / TimeEx.MINUTE);
+    ms = ms % tTEx.HOUR;
+    mm = m_floor(ms / tTEx.MINUTE);
 
-    ms = ms % TimeEx.MINUTE;
-    ss = m_floor(ms / TimeEx.SECOND);
+    ms = ms % tTEx.MINUTE;
+    ss = m_floor(ms / tTEx.SECOND);
     return hh, mm, ss;
 end
 
 -- 天时分秒
 function TimeEx.getDHMS(ms)
-    local dd = m_floor(ms / TimeEx.DAY);
+    local dd = m_floor(ms / tTEx.DAY);
 
-    ms = ms % TimeEx.DAY;
-    local hh, mm, ss = TimeEx.getHMS(ms);
+    ms = ms % tTEx.DAY;
+    local hh, mm, ss = tTEx.getHMS(ms);
     return hh, mm, ss, dd;
 end
 
-function TimeEx.getHMSBySec(sec) return TimeEx.getHMS(sec * TimeEx.SECOND) end
-
-function TimeEx.getDHMSBySec(sec) return TimeEx.getDHMS(sec * TimeEx.SECOND) end
+function TimeEx.getHMSBySec(sec) return tTEx.getHMS(sec * tTEx.SECOND); end
+function TimeEx.getDHMSBySec(sec) return tTEx.getDHMS(sec * tTEx.SECOND); end
 
 function TimeEx.addDHMS(day, hour, minute, second, isZero)
-    local _val = (isZero == true) and TimeEx.getZeroTime() or
-                     TimeEx.getCurrentTime()
-    _val = _val + TimeEx.toSec(
-               (day or 0) * TimeEx.DAY + (hour or 0) * TimeEx.HOUR +
-                   (minute or 0) * TimeEx.MINUTE + (second or 0) * TimeEx.SECOND);
+    local _val = (isZero == true) and tTEx.getZeroTime() or
+                     tTEx.getCurrentTime();
+    _val = _val + tTEx.toSec(
+               (day or 0) * tTEx.DAY + (hour or 0) * tTEx.HOUR +
+                   (minute or 0) * tTEx.MINUTE + (second or 0) * tTEx.SECOND);
     return _val;
 end
 
-function TimeEx.addDay(day, isZero) return TimeEx.addDHMS(day, 0, 0, 0, isZero); end
+function TimeEx.addDay(day, isZero) return tTEx.addDHMS(day, 0, 0, 0, isZero); end
 
 function TimeEx.addHour(hour, isZero)
-    return TimeEx.addDHMS(0, hour, 0, 0, isZero);
+    return tTEx.addDHMS(0, hour, 0, 0, isZero);
 end
 
 function TimeEx.addMinue(minute, isZero)
-    return TimeEx.addDHMS(0, 0, minute, 0, isZero);
+    return tTEx.addDHMS(0, 0, minute, 0, isZero);
 end
 
 function TimeEx.addSecond(second, isZero)
-    return TimeEx.addDHMS(0, 0, 0, second, isZero);
+    return tTEx.addDHMS(0, 0, 0, second, isZero);
 end
 
 -- 与0点的时间差
-function TimeEx.getDiffZero(second) return TimeEx.diffSec(nil, second); end
-
-function TimeEx.toMS(sec) return sec * TimeEx.SECOND end
-
-function TimeEx.toSec(ms) return ms * TimeEx.TO_SECOND end
+function TimeEx.getDiffZero(second) return tTEx.diffSec(nil, second); end
+function TimeEx.toMS(sec) return sec * tTEx.SECOND; end
+function TimeEx.toSec(ms) return ms * tTEx.TO_SECOND; end
 --[[
 --- 数与随机数
 -- Author : canyon / 龚阳辉
@@ -758,30 +755,30 @@ end
 function tonum16(val, def) return tonum(val, 16, def); end
 
 function tonum10(val, def)
-    if isNum(val) then return val end
+    if isNum(val) then return val; end
     return tonum(val, 10, def);
 end
 
 function toint(val, def)
-    if not isNum(val) then val = tonum(val, nil, def) end
-    return m_round(val)
+    if not isNum(val) then val = tonum(val, nil, def); end
+    return m_round(val);
 end
 
 function todecimal(val, acc, def, isRound)
     local _pow = 1
-    if isNum(acc) then for i = 1, acc do _pow = _pow * 10 end end
+    if isNum(acc) then for i = 1, acc do _pow = _pow * 10; end end
 
-    local _v = tonum(val, nil, def) * _pow
-    _v = (isRound == true) and m_round(_v) or _v
-    if _pow > 1 then _v = m_floor(_v) end
-    return _v / _pow
+    local _v = tonum(val, nil, def) * _pow;
+    _v = (isRound == true) and m_round(_v) or _v;
+    if _pow > 1 then _v = m_floor(_v); end
+    return _v / _pow;
 end
 
-function todecimal0(val, def, isRound) return todecimal(val, nil, def, isRound) end
-
-function todecimal2(val, def, isRound) return todecimal(val, 2, def, isRound) end
+function todecimal0(val, def, isRound) return todecimal(val, nil, def, isRound); end
+function todecimal2(val, def, isRound) return todecimal(val, 2, def, isRound); end
 
 NumEx = {};
+local tNEx = NumEx;
 function NumEx.onSeek()
     local _time = os.time();
     local _seed = tostring(_time):reverse():sub(1, 6);
@@ -792,7 +789,7 @@ end
 function NumEx.retainDecimal(v, fnum)
     fnum = tonum10(fnum, 2);
     if fnum > 0 then
-        local fmt = "%." .. fnum .. "f"
+        local fmt = "%." .. fnum .. "f";
         v = str_format(fmt, v);
         v = tonum10(v);
     end
@@ -801,46 +798,46 @@ end
 
 -- 产生 : 小于base的小数
 function NumEx.nextFloat(base, isSeek)
-    if isSeek == true then NumEx.onSeek(); end
+    if isSeek == true then tNEx.onSeek(); end
     base = tonum10(base, 10000);
     return m_random() * base;
 end
 
 -- 产生 : 小于base并保留npos位的小数
 function NumEx.nextFloatPos(base, npos, isSeek)
-    local _f = NumEx.nextFloat(base, isSeek);
-    return NumEx.retainDecimal(_f, npos);
+    local _f = tNEx.nextFloat(base, isSeek);
+    return tNEx.retainDecimal(_f, npos);
 end
 
 -- 产生 : 小于base的两位小数
 function NumEx.nextFloatPos2(base, isSeek)
-    return NumEx.nextFloatPos(base, 2, isSeek);
+    return tNEx.nextFloatPos(base, 2, isSeek);
 end
 
 -- 产生 : 整数 [1~base]
 function NumEx.nextInt(base, isSeek)
-    if isSeek == true then NumEx.onSeek(); end
+    if isSeek == true then tNEx.onSeek(); end
     base = tonum10(base, 10000);
-    if base <= 1 then return NumEx.nextInt(2); end
+    if base <= 1 then return tNEx.nextInt(2); end
 
     return m_random(base);
 end
 
 -- 产生 : 整数 [0~base)
 function NumEx.nextIntZero(base, isSeek)
-    local _r = NumEx.nextInt(base, isSeek);
+    local _r = tNEx.nextInt(base, isSeek);
     return _r - 1;
 end
 
 -- 产生 : 整数 [min~max]
 function NumEx.nextNum(min, max, isSeek)
-    if isSeek == true then NumEx.onSeek(); end
+    if isSeek == true then tNEx.onSeek(); end
     return m_random(min, max);
 end
 
 -- 随机 - bool值
 function NumEx.nextBool()
-    local _r = NumEx.nextIntZero(2);
+    local _r = tNEx.nextIntZero(2);
     return _r == 1;
 end
 
@@ -849,17 +846,17 @@ function NumEx.nextWeightList(list, wKey)
     local _sum, _nv = 0
     for k, v in ipairs(list) do
         if (not wKey) or (v[wKey]) then
-            _nv = tonumber(v) or v[wKey]
-            _sum = _sum + _nv
+            _nv = tonumber(v) or v[wKey];
+            _sum = _sum + _nv;
         end
     end
     if _sum > 0 then
-        local _r = NumEx.nextInt(_sum)
-        local _sum2 = 0
+        local _r = tNEx.nextInt(_sum);
+        local _sum2 = 0;
         for k, v in ipairs(list) do
             if (not wKey) or (v[wKey]) then
-                _nv = tonumber(v) or v[wKey]
-                _sum2 = _sum2 + _nv
+                _nv = tonumber(v) or v[wKey];
+                _sum2 = _sum2 + _nv;
                 if _sum2 >= _r then return k, _r, _sum end
             end
         end
@@ -868,15 +865,15 @@ function NumEx.nextWeightList(list, wKey)
 end
 
 function NumEx.nextWeight(...)
-    local _args = {...}
-    return NumEx.nextWeightList(_args)
+    local _args = {...};
+    return tNEx.nextWeightList(_args)
 end
 
 -- [0-9]随机数连接的字符串长度nlen
 function NumEx.nextStr(nlen, isSeek)
-    if isSeek == true then NumEx.onSeek(); end
+    if isSeek == true then tNEx.onSeek(); end
     local val = {};
-    for i = 1, nlen do tb_insert(val, NumEx.nextIntZero(10)); end
+    for i = 1, nlen do tb_insert(val, tNEx.nextIntZero(10)); end
     return tb_concat(val, "");
 end
 
@@ -898,7 +895,7 @@ end
 
 function NumEx.isBitAnd(n1, n2)
     local _min = n1 > n2 and n2 or n1;
-    return NumEx.bitAnd(n1, n2) == _min;
+    return tNEx.bitAnd(n1, n2) == _min;
 end
 
 -- 左移
@@ -948,12 +945,12 @@ end
 
 -- 是否奇数
 function NumEx.isOdd(src)
-    local _mf = NumEx.modf(src, 2);
+    local _mf = tNEx.modf(src, 2);
     return _mf == 1;
 end
 
 -- 是否偶数
 function NumEx.isEven(src)
-    local _mf = NumEx.modf(src, 2);
+    local _mf = tNEx.modf(src, 2);
     return _mf == 0;
 end
