@@ -1,0 +1,1138 @@
+--[[
+-- lua 的扩展脚本
+-- Author : canyon / 龚阳辉
+-- Date : 2015-05-25 09:25
+-- Desc : table,string,os,number
+--]]
+
+local tonumber,tostring,type = tonumber,tostring,type
+local error = error
+
+local table = table
+local tb_insert = table.insert
+local tb_remove = table.remove
+local tb_sort = table.sort
+local tb_join = table.concat
+local tb_concat = table.concat
+
+local math = math;
+local m_max = math.max;
+local m_min = math.min;
+local m_random = math.random
+local m_randomseed = math.randomseed
+local m_floor = math.floor
+math.round = math.round or function(val)
+	local nVal = m_floor(val)
+	local fVal = val;
+	if nVal ~= 0 then
+		fVal = val - nVal;
+	end
+	if fVal >= 0.5 then
+		nVal = nVal + 1;
+	end
+	return nVal;
+end
+local m_round = math.round
+local m_modf = math.modf
+math.clamp = math.clamp or function(v, minValue, maxValue)  
+    if v < minValue then
+        return minValue
+    end
+    if( v > maxValue) then
+        return maxValue
+    end
+    return v 
+end
+
+local string = string
+local str_format = string.format
+local str_upper = string.upper
+local str_len = string.len
+local str_rep = string.rep
+local str_find = string.find
+local str_gsub = string.gsub
+local str_sub = string.sub
+local str_byte = string.byte
+local str_char = string.char
+local str_gmatch = string.gmatch
+
+--[[
+-- table 扩展
+-- Author : canyon / 龚阳辉
+-- Date : 2015-05-25 09:25
+--]]
+-- 取数组长度
+function table.lens(src)
+    local count = 0
+    if type(src) == "table" then
+        count = #src  -- # 官方解释，取非队列数组的对象的长度不固定的
+    end
+    return count
+end
+
+-- 取数组长度
+function table.lens2(src)
+    local count = 0
+    if type(src) == "table" then
+        for _,_ in ipairs(src) do
+            count = count + 1;
+        end
+    end
+    return count
+end
+
+-- 取对象长度
+function table.size(src)
+    local count = 0
+    if type(src) == "table" then
+        for _,_ in pairs(src) do
+            count = count + 1;
+        end
+    end
+    return count
+end
+
+function table.end_arr(src,nEnd)
+    if type(src) == "table" then
+        local _lens = #src
+        nEnd = (nEnd ~= nil) and (_lens + nEnd) or _lens
+        if nEnd >= _lens then nEnd = _lens end
+        return src[nEnd]
+    end
+end
+
+function table.contains(src,element)
+    if element and type(src) == "table" then
+        for k,v in pairs(src) do
+            if v == element then
+				return true,k,v;
+            end
+        end
+    end
+    return false
+end
+
+function table.contains_func(src,func,obj)
+    if func and type(src) == "table" then
+        for k,v in pairs(src) do
+            if func(v,obj) then
+				return true,k,v;
+            end
+        end
+    end
+    return false
+end
+
+function table.contains_id(src,obj)
+    return table.contains_func(src,lfc_equalId,obj)
+end
+
+local function _keys_vals(src,sortFunc,isKey)
+    local _ret = {};
+    if type(src) == "table" then
+        isKey = isKey == true;
+        for k,v in pairs(src) do
+            tb_insert(_ret,isKey and k or v);
+        end
+        if sortFunc and #_ret > 1 then
+            tb_sort( _ret, sortFunc );
+        end
+    end
+    return _ret;
+end
+
+function table.keys(src,sortFunc)
+    return _keys_vals(src,sortFunc,true);
+end
+
+function table.values(src,sortFunc)
+    return _keys_vals(src,sortFunc);
+end
+
+function lfc_equal( val,obj )
+    return val == obj;
+end
+
+function lfc_equalId( val,obj )
+    if type(obj) == "table" then
+        obj = obj.id;
+    end
+    return tostring(val.id) == tostring(obj);
+end
+
+function lfc_greater_than( a,b )
+    return a > b;
+end
+
+function table.removeValues( src,element,times )
+    return table.removeValuesFunc( src,lfc_equal,element,times );
+end
+
+function table.removeValuesFunc( src,func,obj,times )
+    times = tonum10(times,-1);
+    local _lens = 0;
+    if 0 ~= times and func and type(src) == "table" then
+        local _lbRm = {};
+        for k,v in pairs(src) do
+            if times == 0 then
+                break;
+            end
+            if func(v,obj) then
+                times = times - 1;
+                tb_insert(_lbRm,k);
+            end
+        end
+
+        _lens = #_lbRm;
+        if _lens > 0 then
+            tb_sort(_lbRm,lfc_greater_than);
+
+            for i=1,_lens do
+                tb_remove(src,_lbRm[i]);
+            end
+        end
+    end
+    return src,_lens;
+end
+
+function table.sub(src,nBegin,nEnd)
+    local _ret = {};
+    for i,v in ipairs(src) do
+        if i >= nBegin and i <= nEnd then
+            tb_insert(_ret,v);
+        end
+    end
+    return _ret;
+end
+
+function table.sub_page(src,page,pageCount)
+    page = m_max(page,1);
+    pageCount = m_max(pageCount,1);
+    local nBegin = (page - 1) * pageCount + 1;
+    local nEnd = nBegin + pageCount - 1;
+    return table.sub(src,nBegin,nEnd);
+end
+
+function table.merge(dest, src)
+    for k, v in pairs(src) do
+        dest[k] = v
+    end
+    return dest;
+end
+
+function table.append(dest,src,begin)
+    begin = toint(begin)
+    if begin <= 0 then
+        begin = #dest + 1
+    end
+
+    local len = #src
+    for i = 0, len - 1 do
+        dest[i + begin] = src[i + 1]
+    end
+    return dest;
+end
+
+function table.indexOf(array, value, begin)
+    local _lens = #array
+    for i = begin or 1, _lens do
+        if array[i] == value then return i end
+    end
+    return false
+end
+
+function table.keyOf(src, value)
+    for k, v in pairs(src) do
+        if v == value then return k end
+    end
+end
+
+function table.foreach(src, fnvk)
+    for k, v in pairs(src) do
+        fnvk(v,k);
+    end
+end
+
+function table.foreachArrs(src, fnvk)
+    for k, v in ipairs(src) do
+        fnvk(v,k);
+    end
+end
+
+function table.foreach_new(src, fnvk)
+    local _ret = {}
+    for k, v in pairs(src) do
+        _ret[k] = fnvk(v,k);
+    end
+    return _ret;
+end
+
+function table.filter(src,fnvk)
+    local n = {}
+    for k, v in pairs(src) do
+        if fnvk(v, k) then
+            n[k] = v
+        end
+    end
+    return n
+end
+
+function table.unique(src, bArray)
+    local check = {}
+    local n = {}
+    local idx = 1
+    for k, v in pairs(src) do
+        if not check[v] then
+            if bArray then
+                n[idx] = v
+                idx = idx + 1
+            else
+                n[k] = v
+            end
+            check[v] = true
+        end
+    end
+    return n
+end
+
+local function _deepCopy( src,dest )
+    dest = dest or {}
+    for k, v in pairs( src ) do
+        if type(v) == "table" then
+            dest[k] = _deepCopy( v )
+        else
+            dest[k] = v
+        end
+    end
+    return dest
+end
+
+function table.deepCopy( src,dest )
+    return _deepCopy( src,dest )
+end
+
+function table.getSafeArrayValue( array,index )
+    index = m_min(#array,m_max(index, 1));
+    return array[ index ]
+end
+
+function table.shuffle(arrTab)
+    if arrTab == nil then
+        return
+    end
+    local _lens = #arrTab;
+    if _lens <= 1 then
+        return arrTab;
+    end
+    
+    local _tmp,_ret = {},{}
+    for i = 1,_lens do
+        tb_insert(_tmp,i);
+    end
+
+    local _nVal,_nInd;
+    while _lens > 0 do
+        _nInd = m_random(_lens);
+        _nVal = _tmp[_nInd];
+        if _nVal and arrTab[_nVal] then
+            tb_insert(_ret,arrTab[_nVal]);
+            tb_remove(_tmp,_nInd);
+            _lens = #_tmp;
+        end
+    end
+    return _ret;
+end
+
+local function _clear(src,isDeep)
+    local _lens,_tp = table.size(src);
+	if _lens == 0 then
+		return src;
+	end
+	
+	for k,v in pairs(src) do
+		if k ~= "__index" then
+			_tp = type(v);
+			if _tp ~= "function" then
+				if _tp == "table" then
+					if isDeep == true then
+						_clear(v,isDeep);
+					else
+						src[k] = nil;
+					end
+				else
+					src[k] = nil;
+				end
+			end
+		end
+	end
+	return src;
+end
+
+function clearLT(src,isDeep)
+	return _clear(src,isDeep) 
+end
+
+function table.clear(src,isDeep)
+	return _clear(src,isDeep)
+end
+
+function table.getVK(src,itKey,itVal)
+	if src and itKey and itVal then
+		for k, v in pairs( src ) do
+			if v[itKey] == itVal then
+				return v,k;
+			end
+		end
+	end
+end
+
+function table.getVK4Arr(src,itKey,itVal)
+	if src and itKey and itVal then
+		for k, v in ipairs( src ) do
+			if v[itKey] == itVal then
+				return v,k;
+			end
+		end
+	end
+end
+
+-- 交集
+function table.intersection(t1,t2)
+    local dest = t1 or t2
+    local src = (dest == t1) and t2 or t1
+	if src then
+        dest = dest or {}
+        local _ret = {}
+		for _, v1 in pairs( src ) do
+            for _, v2 in pairs( dest ) do
+                if v2 == v1 then
+                    tb_insert( _ret,v2 )
+                end
+			end
+		end
+        return _ret
+    end
+    return dest
+end
+
+--[[
+-- 字符串 string 扩展
+-- Author : canyon / 龚阳辉
+-- Date : 2015-05-25 09:25
+--]]
+local _htmlSpecialChars = {
+    {"&","&amp;"},
+    {" ","&nbsp;"},
+    {"\t","    "},
+    {"\"","&quot;"},
+    {"'","&#039;"},
+    {"<","&lt;"},
+    {">","&gt;"},
+    {"\n","<br />"},
+}
+
+local function checkstring(str)
+    if type(str) ~= "string" then
+        str = tostring(str)
+    end
+    return str
+end
+
+function string.toHtml(str,isRestroe)
+    for _, v in ipairs(_htmlSpecialChars) do
+        if isRestroe == true then
+            str = str_gsub(str, v[2], v[1]);
+        else
+            str = str_gsub(str, v[1], v[2]);
+        end
+    end
+    return str;
+end
+
+function string.split(inStr,sep,sepType,useType)
+    local _lt = {};
+    inStr = tostring(inStr);
+    if inStr == nil or inStr == "" then
+        return _lt;
+    end
+
+    if sep == nil or sep == "" then
+        sep = "%s";
+    else
+        sep = tostring(sep);
+    end
+    
+    if (not sepType) then
+        sep = "([^"..sep.."]+)";
+    elseif sepType == 1 then
+        sep = "[^"..sep.."]+";
+    elseif sepType == 2 then
+        sep = "(.*)"..sep.."(.*)"; -- 固定分隔k,v模式
+    end
+
+    if useType == 1 then
+        local pos = 1;
+        for nBen,nEnd in function() return str_find(inStr, sep, pos, true) end do
+            tb_insert(_lt, str_sub(inStr, pos, nBen - 1))
+            pos = nEnd + 1
+        end
+        tb_insert(_lt, str_sub(inStr, pos))
+    elseif useType == 2 then
+        str_gsub(inStr,sep,function ( w )
+            tb_insert(_lt,w)
+        end)
+    else
+        for str,str2 in str_gmatch(inStr, sep) do
+            tb_insert(_lt,str);
+            if (sepType == 2) and str2 then
+                tb_insert(_lt,str2);
+            end
+        end
+    end
+
+    return _lt;
+end
+
+function string.contains(src,val)
+    local begIndex,endIndex = str_find(src,val);
+    local isRet = not (not begIndex);
+    return isRet,begIndex,endIndex;
+end
+
+function string.starts(src,sbeg)
+    return str_sub(src,1,str_len(sbeg)) == sbeg
+ end
+ 
+function string.ends(src,send)
+    return send == '' or str_sub(src,-str_len(send)) == send
+ end
+
+function string.replace(inStr,pat,val)
+    return str_gsub(inStr,pat,val);
+end
+
+function string.ltrim(inStr)
+    return str_gsub(inStr, "^[ \t\n\r]+", "")
+end
+
+function string.rtrim(inStr)
+    return str_gsub(inStr, "[ \t\n\r]+$", "")
+end
+
+function string.trim(inStr)
+    if not inStr then
+        return ""
+    end
+    inStr = tostring(inStr)
+    inStr = str_gsub(inStr,"^%s*(.-)%s*$","%1")
+    return inStr
+end
+
+function string.upfirst(inStr)
+    return str_upper(str_sub(inStr, 1, 1)) .. str_sub(inStr, 2)
+end
+
+function string.lastIndexOf(inStr,sep)
+	if not sep or "" == sep or not inStr or "" == inStr then
+		return -1;
+	end
+	local _posLast = str_find(inStr,str_format("%s[^%s]*$",sep,sep));
+	return _posLast or -1;
+end
+
+function string.lastStr(inStr,sep)
+	local _posLast = string.lastIndexOf(inStr,sep)
+	if not _posLast or _posLast == -1 then
+		return inStr;
+	end
+	return str_gsub(inStr,str_sub(inStr, 1, _posLast),"");
+end
+
+-- 中文也是一个字符
+function string.utf8len(src)
+    local len  = str_len(src)
+    local left,cnt = len,0
+    local arr  = {0, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc}
+    local tmp,i;
+    while left ~= 0 do
+        tmp = str_byte(src, -left)
+        i   = #arr
+        while arr[i] do
+            if tmp >= arr[i] then
+                left = left - i
+                break
+            end
+            i = i - 1
+        end
+        cnt = cnt + 1
+    end
+    return cnt
+end
+
+function string.toStrByNum(num,lens)
+    lens = tonum10(lens,3);
+    local fmt = "%0".. lens .. "d";
+    return str_format(fmt,num);
+end
+
+function string.toStr16( num,isBig)
+    local fmt = isBig == true and "%X" or "%x";
+    return str_format(fmt,num);
+end
+
+function string.toNum16( str )
+    return tonum16(str)
+end
+
+function string.toColRGB( str )
+    str = str_gsub(str,"#","");
+    local _lens = #str;
+    if _lens ~= 6 and _lens ~= 8 then
+        return 0,0,0;
+    end
+
+    local _lb = {}
+    for i=1,_lens,2 do
+        tb_insert(_lb,string.toNum16(str_sub(str,i,i+1)));
+    end
+    return unpack(_lb);
+end
+
+function string.isHasSpace(inStr)
+    local _isHas = string.contains(inStr,"[ \t\n\r　]");
+	return _isHas;
+end
+
+function string.csFmt2Luafmt(inStr)
+    if not inStr then return "" end
+    local _sbeg = string.starts
+    local _send = string.ends
+    local _ss = string.split(inStr,"{%d}") -- {%d([^:[D]?[%d]*])?}
+    _ss = tb_join(_ss,"%s")
+    if _sbeg(inStr,"{0}") then
+        _ss = "%s" .. _ss
+    end
+    local _end = str_sub(inStr,-3)
+    if _sbeg(_end,"{") and _send(_end,"}") then
+        _ss = _ss .. "%s"
+    end
+	return _ss;
+end
+
+function string.insert(s1, pos, s2)
+    s1 = checkstring(s1)
+    if not s2 then
+        return s1
+    end
+    s2 = checkstring(s2)
+    pos = pos or 1
+    local len = str_len(s1)
+    if pos <= 1 then
+        return s2 .. s1
+    elseif pos >= len + 1 then
+        return s1 .. s2
+    end
+    local pre, suf = str_sub(s1, 1, pos - 1), str_sub(s1, pos, len)
+    return pre .. s2 .. suf
+end
+
+function string.utf8insert(s1, pos, s2)
+    s1 = checkstring(s1)
+    if not s2 then
+        return s1
+    end
+    s2 = checkstring(s2)
+    pos = pos or 1
+    local utf8 = utf8
+    local utf8len = utf8.len(s1)
+    local len = str_len(s1)
+    if pos <= 1 then
+        return s2 .. s1
+    elseif pos >= utf8len + 1 then
+        return s1 .. s2
+    end
+    local m = utf8.offset(s1, pos)
+    local pre, suf = str_sub(s1, 1, m - 1), str_sub(s1, m, len)
+    return pre .. s2 .. suf
+end
+
+function string.remove(s1, pos, num)
+    if not s1 then
+        error("the argument#1 is nil!")
+    end
+    local len = str_len(s1)
+    pos = pos or 1
+    num = num or len
+    if pos <= 1 then
+        pos = 1
+    elseif pos >= len + 1 then
+        return s1
+    end
+    if num <= 0 then
+        return s1
+    end
+    if pos == 1 and num >= len then
+        return ""
+    end
+    local m = math.min(pos + num, len)
+    local pre, suf = str_sub(s1, 1, pos - 1), str_sub(s1, m, len)
+    return pre .. suf
+end
+
+function string.utf8remove(s1, pos, num)
+    if not s1 then
+        error("the argument#1 is nil!")
+    end
+    local utf8 = utf8
+    local utf8len = utf8.len(s1)
+    local len = str_len(s1)
+    pos = pos or 1
+    num = num or utf8len
+    if pos <= 1 then
+        pos = 1
+    elseif pos >= utf8len + 1 then
+        return s1
+    end
+    if num <= 0 then
+        return s1
+    end
+    if pos == 1 and num >= utf8len then
+        return ""
+    end
+    local m1 = utf8.offset(s1, pos)
+    local m2 = utf8.offset(s1, math.min(pos + num, utf8len + 1))
+    local pre, suf = str_sub(s1, 1, m1 - 1), str_sub(s1, m2, len)
+    return pre .. suf
+end
+
+function string.utf8reverse(str)
+    if not str then
+        error("the argument#1 is nil!")
+    end
+    if str == "" then
+        return str
+    end
+    local utf8 = utf8
+    local array = { utf8.codepoint(str, utf8.offset(str, 1), utf8.offset(str, -1)) }
+    local rArray = {}
+    local len = #array
+    for i = len, 1, -1 do
+        rArray[len - i + 1] = array[i]
+    end
+    return utf8.char(unpack(rArray))
+end
+
+--[[
+-- 时间Ex
+-- Author : canyon / 龚阳辉
+-- Date : 2015-05-25 09:25
+--]]
+local os = os
+local os_time = os.time
+local os_date = os.date
+local os_difftime = os.difftime
+local _lbDTime = { year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0};
+TimeEx = {
+	MS = 1,
+	TO_SECOND = 0.001,
+	SECOND = 1000,
+	MINUTE = 60000,
+	HOUR = 3600000,
+	DAY = 86400000,
+	WEEK = 604800000,
+	DIFF_SEC = 0, -- 相差时间(秒)
+};
+
+local function _ReDTime(year,month,day,hour,minute,second)
+  _lbDTime.year = year or 2019;
+  _lbDTime.month = month or 1;
+  _lbDTime.day = day or 1;
+  _lbDTime.hour = hour or 0;
+  _lbDTime.min = minute or 0;
+  _lbDTime.sec = second or 0;
+  return _lbDTime;
+end
+
+function TimeEx.getTime( year,month,day,hour,minute,second )
+  if (year and month) and (day or hour or minute or second) then
+    return os_time(_ReDTime(year,month,day,hour,minute,second));
+  end
+  return os_time();
+end
+
+-- 取得当前时间(单位:second)
+function TimeEx.getCurrentTime()
+  local _val = TimeEx.getTime() + TimeEx.DIFF_SEC;
+  return m_round(_val);
+end
+
+-- 相差时间秒 = (t2-t1)
+function TimeEx.diffSec(t1Sec,t2Sec)
+  t2Sec = t2Sec or TimeEx.getCurrentTime();
+  t1Sec = t1Sec or TimeEx.getZeroTime(t2Sec);
+  return os_difftime(t2Sec,t1Sec);
+end
+
+function TimeEx.format(sec,fmtStr)
+	sec = sec or TimeEx.getCurrentTime();
+	fmtStr = fmtStr or "%Y%m%d";
+	return os_date(fmtStr,sec);
+end
+
+function TimeEx.getDate(sec)
+  sec = sec or TimeEx.getCurrentTime();
+  return TimeEx.format(sec,"*t");
+end
+
+-- 零点时间
+function TimeEx.getZeroTime( sec )
+  local _dt = TimeEx.getDate(sec);
+  return TimeEx.getTime(_dt.year,_dt.month,_dt.day);
+end
+
+--当周周一0点时间
+function TimeEx.getZeroTimeOfWeek(sec)
+    sec = sec or TimeEx.getCurrentTime()
+    local t = os_date("*t", sec)
+    t.sec = 0
+    t.hour = 0
+    t.min = 0
+    if t.wday == 1 then
+        t.day = t.day - 6
+    else
+        t.day = t.day + 2 - t.wday
+    end
+    return os_time(t)
+end
+
+-- 取得当前时间的yyyyMMdd
+function TimeEx.getYyyyMMdd()
+  return TimeEx.format();
+end
+
+-- 服务器差值时间
+function TimeEx.setDiffSec( diffSec )
+  TimeEx.DIFF_SEC = diffSec or 0;
+end
+
+-- 时分秒
+function TimeEx.getHMS( ms )
+  local hh,mm,ss = 0,0,0;
+  hh = m_floor( ms / TimeEx.HOUR );
+  
+  ms = ms % TimeEx.HOUR;
+  mm = m_floor( ms / TimeEx.MINUTE );
+
+  ms = ms % TimeEx.MINUTE;
+  ss = m_floor(ms / TimeEx.SECOND);
+  return hh,mm,ss;
+end
+
+-- 天时分秒
+function TimeEx.getDHMS( ms )
+  local dd = m_floor( ms / TimeEx.DAY );
+
+  ms = ms % TimeEx.DAY;
+  local hh,mm,ss = TimeEx.getHMS(ms);
+  return hh,mm,ss,dd;
+end
+
+function TimeEx.getHMSBySec( sec )
+  return TimeEx.getHMS(sec * TimeEx.SECOND)
+end
+
+function TimeEx.getDHMSBySec( sec )
+  return TimeEx.getDHMS(sec * TimeEx.SECOND)
+end
+
+function TimeEx.addDHMS( day,hour,minute,second,isZero )
+  local _val = (isZero == true) and TimeEx.getZeroTime() or TimeEx.getCurrentTime()
+  _val = _val + TimeEx.toSec((day or 0) * TimeEx.DAY + (hour or 0) * TimeEx.HOUR + (minute or 0) * TimeEx.MINUTE + (second or 0) * TimeEx.SECOND);
+  return _val;
+end
+
+function TimeEx.addDay( day,isZero )
+  return TimeEx.addDHMS(day,0,0,0,isZero);
+end
+
+function TimeEx.addHour( hour,isZero )
+  return TimeEx.addDHMS(0,hour,0,0,isZero);
+end
+
+function TimeEx.addMinue( minute,isZero )
+  return TimeEx.addDHMS(0,0,minute,0,isZero);
+end
+
+function TimeEx.addSecond( second,isZero )
+  return TimeEx.addDHMS(0,0,0,second,isZero);
+end
+
+-- 与0点的时间差
+function TimeEx.getDiffZero( second )
+  return TimeEx.diffSec(nil,second);
+end
+
+function TimeEx.toMS( sec )
+  return sec * TimeEx.SECOND
+end
+
+function TimeEx.toSec( ms )
+  return ms * TimeEx.TO_SECOND
+end
+--[[
+--- 数与随机数
+-- Author : canyon / 龚阳辉
+-- Date : 2016-05-25 09:25
+-- Desc : base : 随机数值最大值 , isSeek 是否重置随机种子需要先引起(属于底层基础)
+-- math.random([n [, m])] 无参调用,产生(0,1)之间的浮点随机数,只有参数n,产生1-n之间的整数.
+-- math.fmod(x,y) = 取x/y的余数?;math.modf(v) = 取整数,小数
+--]]
+if bit then
+	bit_band = bit.band; -- 一个或多个无符号整数 '与 &' 运算 得到值
+	bit_bor = bit.bor; -- 一个或多个无符号整数 '或 |' 运算 得到值
+	bit_shl = bit.shl; -- 两个无符号整数,第一个参数是被移位的数，第二个参数是向左移动的位数
+	bit_shr = bit.shr; -- 两个无符号整数,第一个参数是被移位的数，第二个参数是向右移动的位数
+	bit_bnot = bit.bnot; -- 取反
+end
+
+function isNum(val)
+    return type(val) == "number";
+end
+
+function tonum(val,base,def)
+	def = def or 0;
+    return tonumber(tostring(val), base) or def;
+end
+
+function tonum16(val,def)
+	return tonum(val,16,def);
+end
+
+function tonum10(val,def)
+	if isNum(val) then return val end
+	return tonum(val,10,def);
+end
+
+function toint(val,def)
+	if not isNum(val) then val = tonum(val,nil,def) end
+    return m_round(val)
+end
+
+function todecimal(val,acc,def,isRound)
+	local _pow = 1
+	if isNum(acc) then
+		for i = 1,acc do
+			_pow = _pow * 10
+		end
+	end
+
+	local _v = tonum(val,nil,def) * _pow
+	_v = (isRound == true) and m_round(_v) or _v
+	if _pow > 1 then
+		_v = m_floor(_v)
+	end
+    return _v / _pow
+end
+
+function todecimal0(val,def,isRound)
+	return todecimal(val,nil,def,isRound)
+end
+
+function todecimal2(val,def,isRound)
+	return todecimal(val,2,def,isRound)
+end
+
+NumEx = {};
+function NumEx.onSeek()
+	local _time = os.time();
+	local _seed = tostring(_time):reverse():sub(1, 6);
+	m_randomseed(_seed);
+end
+
+-- 保留小数
+function NumEx.retainDecimal(v,fnum)
+	fnum = tonum10(fnum,2);
+	if fnum > 0 then
+		local fmt = "%.".. fnum .. "f"
+		v = str_format(fmt, v);
+		v = tonum10(v);
+	end
+	return v;
+end
+
+-- 产生 : 小于base的小数
+function NumEx.nextFloat(base,isSeek)
+	if isSeek == true then
+		NumEx.onSeek();
+	end
+	base = tonum10(base,10000);
+	return m_random() * base;
+end
+
+-- 产生 : 小于base并保留npos位的小数
+function NumEx.nextFloatPos(base,npos,isSeek)
+	local _f = NumEx.nextFloat(base,isSeek);
+	return NumEx.retainDecimal(_f,npos);
+end
+
+-- 产生 : 小于base的两位小数
+function NumEx.nextFloatPos2(base,isSeek)
+	return NumEx.nextFloatPos(base,2,isSeek);
+end
+
+-- 产生 : 整数 [1~base]
+function NumEx.nextInt(base,isSeek)
+	if isSeek == true then
+		NumEx.onSeek();
+	end
+	base = tonum10(base,10000);
+	if base <= 1 then
+		return NumEx.nextInt(2);
+	end
+
+	return m_random(base);
+end
+
+-- 产生 : 整数 [0~base)
+function NumEx.nextIntZero(base,isSeek)
+	local _r = NumEx.nextInt(base,isSeek);
+	return _r - 1;
+end
+
+-- 产生 : 整数 [min~max]
+function NumEx.nextNum( min,max,isSeek )
+	if isSeek == true then
+		NumEx.onSeek();
+	end
+	return m_random(min,max);
+end
+
+-- 随机 - bool值
+function NumEx.nextBool()
+	local _r = NumEx.nextIntZero(2);
+	return _r == 1;
+end
+
+-- 随机 - 权重的index
+function NumEx.nextWeightList( list,wKey )
+	local _sum,_nv = 0
+	for k,v in ipairs(list) do
+		if (not wKey) or (v[wKey]) then
+			_nv = tonumber(v) or v[wKey]
+			_sum = _sum + _nv
+		end
+	end
+	if _sum > 0 then
+		local _r = NumEx.nextInt(_sum)
+		local _sum2 = 0
+		for k, v in ipairs(list) do
+			if (not wKey) or (v[wKey]) then
+				_nv = tonumber(v) or v[wKey]
+				_sum2 = _sum2 + _nv
+				if _sum2 >= _r then
+					return k,_r,_sum
+				end
+			end
+		end
+	end
+	return 0
+end
+
+function NumEx.nextWeight( ... )
+	local _args = { ... }
+	return NumEx.nextWeightList( _args )
+end
+
+-- [0-9]随机数连接的字符串长度nlen
+function NumEx.nextStr(nlen,isSeek )
+	if isSeek == true then
+		NumEx.onSeek();
+	end
+	local val = {};
+	for i=1,nlen do
+		tb_insert(val,NumEx.nextIntZero(10));
+	end
+	return tb_concat(val,"");
+end
+
+function NumEx.bitOr(n1,n2)
+	if bit_bor then
+		return bit_bor(n1,n2);
+	else
+		return (n1 | n2);
+	end
+end
+
+function NumEx.bitAnd(n1,n2)
+	if bit_band then
+		return bit_band(n1,n2);
+	else
+		return (n1 & n2);
+	end
+end
+
+function NumEx.isBitAnd(n1,n2)
+	local _min = n1 > n2 and n2 or n1;
+	return NumEx.bitAnd(n1,n2) == _min;
+end
+
+-- 左移
+function NumEx.bitLeft(org,pos)
+	if bit_shl then
+		return bit_shl(org,pos);
+	else
+		return org << pos;
+	end
+end
+
+-- 右移
+function NumEx.bitRight(org,pos)
+	if bit_shr then
+		return bit_shr(org,pos);
+	else
+		return org >> pos;
+	end
+end
+
+-- 取反
+function NumEx.bitNot(org)
+	if bit_bnot then
+		return bit_bnot(org);
+	else
+		return (~ org);
+	end
+end
+
+-- 取整数或小数
+function NumEx.modDecimal(num,isInt)
+	if (num == nil or num == 0) then
+		return 0;
+	end
+	local _i,_d = m_modf(num)
+	return (isInt == true) and _i or _d
+end
+
+-- 求余数
+function NumEx.modf(src,divisor)
+	if (src == nil or src == 0) or (divisor == nil or divisor == 0) then
+		return 0;
+	end
+	if src < divisor then
+		return src;
+	end
+	
+	local _fl = m_floor(src / divisor);
+	return src - (_fl * divisor);
+end
+
+-- 是否奇数
+function NumEx.isOdd(src)
+	local _mf = NumEx.modf(src,2);
+	return _mf == 1;
+end
+
+-- 是否偶数
+function NumEx.isEven(src)
+	local _mf = NumEx.modf(src,2);
+	return _mf == 0;
+end
