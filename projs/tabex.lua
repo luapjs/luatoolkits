@@ -14,40 +14,40 @@ local math_random = math.random
 
 -- 取数组长度
 function table.lens(src)
-    local count = 0
+    local cnt = 0
     if type(src) == "table" then
-        count = #src  -- # 官方解释，取非队列数组的对象的长度不固定的
+        cnt = #src  -- # 官方解释，取非队列数组的对象的长度不固定的
     end
-    return count
+    return cnt
 end
 
 -- 取数组长度
 function table.lens2(src)
-    local count = 0
+    local cnt = 0
     if type(src) == "table" then
         for _,_ in ipairs(src) do
-            count = count + 1;
+            cnt = cnt + 1;
         end
     end
-    return count
+    return cnt
 end
 
 -- 取对象长度
 function table.size(src)
-    local count = 0
+    local cnt = 0
     if type(src) == "table" then
         for _,_ in pairs(src) do
-            count = count + 1;
+            cnt = cnt + 1;
         end
     end
-    return count
+    return cnt
 end
 
 function table.end_arr(src,nEnd)
     if type(src) == "table" then
-        local _lens = #src
-        nEnd = (nEnd ~= nil) and (_lens + nEnd) or _lens
-        if nEnd >= _lens then nEnd = _lens end
+        local cnt = #src
+        nEnd = (nEnd ~= nil) and (cnt + nEnd) or cnt
+        if nEnd >= cnt then nEnd = cnt end
         return src[nEnd]
     end
 end
@@ -105,45 +105,76 @@ function lfc_equal( val,obj )
 end
 
 function lfc_equalId( val,obj )
-    if type(obj) == "table" then
-        obj = obj.id;
+    local _rt = (val == obj)
+    if not _rt then
+        if type(val) == "table" then
+            local _id = nil
+            if type(obj) == "table" then
+                _id = obj.id
+            else
+                _id = obj
+            end
+            _rt = tostring(val.id) == tostring(_id);
+        end
     end
-    return tostring(val.id) == tostring(obj);
+    return _rt;
 end
 
 function lfc_greater_than( a,b )
     return a > b;
 end
 
-function table.removeValues( src,element,times )
-    return table.removeValuesFunc( src,lfc_equal,element,times );
-end
-
-function table.removeValuesFunc( src,func,obj,times )
+function table.removeByFunc( src,func,times,... )
+    local cnt = 0;
     times = tonum10(times,-1);
-    local _lens = 0;
     if 0 ~= times and func and type(src) == "table" then
-        local _lbRm = {};
         for k,v in pairs(src) do
             if times == 0 then
                 break;
             end
-            if func(v,obj) then
+            if func( v,... ) then
                 times = times - 1;
-                tb_insert(_lbRm,k);
-            end
-        end
-
-        _lens = #_lbRm;
-        if _lens > 0 then
-            tb_sort(_lbRm,lfc_greater_than);
-
-            for i=1,_lens do
-                tb_remove(src,_lbRm[i]);
+                cnt = cnt + 1
+                src[k] = nil
             end
         end
     end
-    return src,_lens;
+    return src,cnt;
+end
+
+function table.removeListByFunc( src,func,times,... )
+    local cnt = 0;
+    times = tonum10(times,-1);
+    if 0 ~= times and func and type(src) == "table" then
+        for i = #src,1,-1 do
+            if times == 0 then
+                break;
+            end
+
+            if func( src[i],... ) then
+                times = times - 1;
+                cnt = cnt + 1
+                tb_remove(src,i)
+            end
+        end
+    end
+    return src,cnt;
+end
+
+function table.removeEqual(tOrg,obj,times)
+    return table.removeByFunc( tOrg,lfc_equal,times,obj )
+end
+
+function table.removeEqualById(tList,obj,times)
+    return table.removeByFunc( tList,lfc_equalId,times,obj )
+end
+
+function table.removeListEqual(tList,obj,times)
+    return table.removeListByFunc( tList,lfc_equal,times,obj )
+end
+
+function table.removeListEqualById(tList,obj,times)
+    return table.removeListByFunc( tList,lfc_equalId,times,obj )
 end
 
 function table.sub(src,nBegin,nEnd)
@@ -185,8 +216,8 @@ function table.append(dest,src,begin)
 end
 
 function table.indexOf(array, value, begin)
-    local _lens = #array
-    for i = begin or 1, _lens do
+    local cnt = #array
+    for i = begin or 1, cnt do
         if array[i] == value then return i end
     end
     return false
@@ -271,32 +302,32 @@ function table.shuffle(arrTab)
     if arrTab == nil then
         return
     end
-    local _lens = #arrTab;
-    if _lens <= 1 then
+    local cnt = #arrTab;
+    if cnt <= 1 then
         return arrTab;
     end
     
     local _tmp,_ret = {},{}
-    for i = 1,_lens do
+    for i = 1,cnt do
         tb_insert(_tmp,i);
     end
 
     local _nVal,_nInd;
-    while _lens > 0 do
-        _nInd = math_random(_lens);
+    while cnt > 0 do
+        _nInd = math_random(cnt);
         _nVal = _tmp[_nInd];
         if _nVal and arrTab[_nVal] then
             tb_insert(_ret,arrTab[_nVal]);
             tb_remove(_tmp,_nInd);
-            _lens = #_tmp;
+            cnt = #_tmp;
         end
     end
     return _ret;
 end
 
 local function _clear(src,isDeep)
-    local _lens,_tp = table.size(src);
-	if _lens == 0 then
+    local cnt,_tp = table.size(src);
+	if cnt == 0 then
 		return src;
 	end
 	

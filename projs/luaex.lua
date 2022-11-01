@@ -4,8 +4,9 @@
 -- Date : 2015-05-25 09:25
 -- Desc : table,string,os's TimeEx,number's NumEx
 --]] --
-local tonumber, tostring, type = tonumber, tostring, type
-local error = error
+local tostring, type, tonumber = tostring, type, tonumber
+local error, select = error, select
+local package, _require, setmetatable = package, require, setmetatable
 
 local table = table
 local tb_insert = table.insert
@@ -58,36 +59,36 @@ function unpack(arg)
 end
 -- 取数组长度
 function table.lens(src)
-    local count = 0
+    local cnt = 0
     if type(src) == "table" then
-        count = #src -- # 官方解释，取非队列数组的对象的长度不固定的
+        cnt = #src -- # 官方解释，取非队列数组的对象的长度不固定的
     end
-    return count
+    return cnt
 end
 
 -- 取数组长度
 function table.lens2(src)
-    local count = 0
+    local cnt = 0
     if type(src) == "table" then
-        for _, _ in ipairs(src) do count = count + 1; end
+        for _, _ in ipairs(src) do cnt = cnt + 1; end
     end
-    return count
+    return cnt
 end
 
 -- 取对象长度
 function table.size(src)
-    local count = 0
+    local cnt = 0
     if type(src) == "table" then
-        for _, _ in pairs(src) do count = count + 1; end
+        for _, _ in pairs(src) do cnt = cnt + 1; end
     end
-    return count
+    return cnt
 end
 
 function table.end_arr(src, nEnd)
     if type(src) == "table" then
-        local _lens = #src
-        nEnd = (nEnd ~= nil) and (_lens + nEnd) or _lens
-        if nEnd >= _lens then nEnd = _lens end
+        local cnt = #src
+        nEnd = (nEnd ~= nil) and (cnt + nEnd) or cnt
+        if nEnd >= cnt then nEnd = cnt end
         return src[nEnd]
     end
 end
@@ -128,38 +129,75 @@ function table.keys(src, sortFunc) return _keys_vals(src, sortFunc, true); end
 function table.values(src, sortFunc) return _keys_vals(src, sortFunc); end
 function lfc_equal(val, obj) return val == obj; end
 
-function lfc_equalId(val, obj)
-    if type(obj) == "table" then obj = obj.id; end
-    return tostring(val.id) == tostring(obj);
+function lfc_equalId( val,obj )
+    local _rt = (val == obj)
+    if not _rt then
+        if type(val) == "table" then
+            local _id = nil
+            if type(obj) == "table" then
+                _id = obj.id
+            else
+                _id = obj
+            end
+            _rt = tostring(val.id) == tostring(_id);
+        end
+    end
+    return _rt;
 end
 
 function lfc_greater_than(a, b) return a > b; end
 
-function table.removeValues(src, element, times)
-    return table.removeValuesFunc(src, lfc_equal, element, times);
-end
-
-function table.removeValuesFunc(src, func, obj, times)
-    times = tonum10(times, -1);
-    local _lens = 0;
+function table.removeByFunc( src,func,times,... )
+    local cnt = 0;
+    times = tonum10(times,-1);
     if 0 ~= times and func and type(src) == "table" then
-        local _lbRm = {};
-        for k, v in pairs(src) do
-            if times == 0 then break end
-            if func(v, obj) then
+        for k,v in pairs(src) do
+            if times == 0 then
+                break;
+            end
+            if func( v,... ) then
                 times = times - 1;
-                tb_insert(_lbRm, k);
+                cnt = cnt + 1
+                src[k] = nil
             end
         end
+    end
+    return src,cnt;
+end
 
-        _lens = #_lbRm;
-        if _lens > 0 then
-            tb_sort(_lbRm, lfc_greater_than);
+function table.removeListByFunc( src,func,times,... )
+    local cnt = 0;
+    times = tonum10(times,-1);
+    if 0 ~= times and func and type(src) == "table" then
+        for i = #src,1,-1 do
+            if times == 0 then
+                break;
+            end
 
-            for i = 1, _lens do tb_remove(src, _lbRm[i]); end
+            if func( src[i],... ) then
+                times = times - 1;
+                cnt = cnt + 1
+                tb_remove(src,i)
+            end
         end
     end
-    return src, _lens;
+    return src,cnt;
+end
+
+function table.removeEqual(tOrg,obj,times)
+    return table.removeByFunc( tOrg,lfc_equal,times,obj )
+end
+
+function table.removeEqualById(tList,obj,times)
+    return table.removeByFunc( tList,lfc_equalId,times,obj )
+end
+
+function table.removeListEqual(tList,obj,times)
+    return table.removeListByFunc( tList,lfc_equal,times,obj )
+end
+
+function table.removeListEqualById(tList,obj,times)
+    return table.removeListByFunc( tList,lfc_equalId,times,obj )
 end
 
 function table.sub(src, nBegin, nEnd)
@@ -193,8 +231,8 @@ function table.append(dest, src, begin)
 end
 
 function table.indexOf(array, value, begin)
-    local _lens = #array
-    for i = begin or 1, _lens do if array[i] == value then return i end end
+    local cnt = #array
+    for i = begin or 1, cnt do if array[i] == value then return i end end
     return false
 end
 
@@ -257,28 +295,28 @@ end
 
 function table.shuffle(arrTab)
     if arrTab == nil then return end
-    local _lens = #arrTab;
-    if _lens <= 1 then return arrTab; end
+    local cnt = #arrTab;
+    if cnt <= 1 then return arrTab; end
 
     local _tmp, _ret = {}, {}
-    for i = 1, _lens do tb_insert(_tmp, i); end
+    for i = 1, cnt do tb_insert(_tmp, i); end
 
     local _nVal, _nInd;
-    while _lens > 0 do
-        _nInd = m_random(_lens);
+    while cnt > 0 do
+        _nInd = m_random(cnt);
         _nVal = _tmp[_nInd];
         if _nVal and arrTab[_nVal] then
             tb_insert(_ret, arrTab[_nVal]);
             tb_remove(_tmp, _nInd);
-            _lens = #_tmp;
+            cnt = #_tmp;
         end
     end
     return _ret;
 end
 
 local function _clear(src, isDeep)
-    local _lens, _tp = table.size(src);
-    if _lens == 0 then return src; end
+    local cnt, _tp = table.size(src);
+    if cnt == 0 then return src; end
 
     for k, v in pairs(src) do
         if k ~= "__index" then
@@ -483,11 +521,11 @@ function string.toNum16(str) return tonum16(str) end
 
 function string.toColRGB(str)
     str = str_gsub(str, "#", "");
-    local _lens = #str;
-    if _lens ~= 6 and _lens ~= 8 then return 0, 0, 0; end
+    local cnt = #str;
+    if cnt ~= 6 and cnt ~= 8 then return 0, 0, 0; end
 
     local _lb = {}
-    for i = 1, _lens, 2 do
+    for i = 1, cnt, 2 do
         tb_insert(_lb, string.toNum16(str_sub(str, i, i + 1)));
     end
     return unpack(_lb);
@@ -734,6 +772,7 @@ end
 function TimeEx.getDiffZero(second) return tTEx.diffSec(nil, second); end
 function TimeEx.toMS(sec) return sec * tTEx.SECOND; end
 function TimeEx.toSec(ms) return ms * tTEx.TO_SECOND; end
+
 --[[
 --- 数与随机数
 -- Author : canyon / 龚阳辉
@@ -754,7 +793,7 @@ function isNum(val) return type(val) == "number"; end
 
 function tonum(val, base, def)
     def = def or 0;
-    return tonumber(tostring(val), base) or def;
+    return tonumber(val, base) or def;
 end
 
 function tonum16(val, def) return tonum(val, 16, def); end
@@ -769,7 +808,7 @@ function toint(val, def)
     return m_round(val);
 end
 
-function todecimal(val, acc, def, isRound)
+function todecimal(val, def, isRound, acc)
     local _pow = 1
     if isNum(acc) then for i = 1, acc do _pow = _pow * 10; end end
 
@@ -779,8 +818,7 @@ function todecimal(val, acc, def, isRound)
     return _v / _pow;
 end
 
-function todecimal0(val, def, isRound) return todecimal(val, nil, def, isRound); end
-function todecimal2(val, def, isRound) return todecimal(val, 2, def, isRound); end
+function todecimal2(val, def, isRound) return todecimal(val, def, isRound, 2); end
 
 NumEx = {};
 local tNEx = NumEx;
@@ -965,8 +1003,6 @@ end
 -- Author : canyon / 龚阳辉
 -- Date : 2015-05-25 09:25
 --]]
-local package, _require, setmetatable = package, require, setmetatable
-local select = select
 function clearLoadLua(luapath)
     package.loaded[luapath] = nil;
     package.preload[luapath] = nil;
@@ -994,11 +1030,10 @@ end
 
 function extends(src, parent) return setmetatable(src, {__index = parent}); end
 
-function weakTB(weakKey, objIndex)
+function weakTB(objIndex, weakKey)
     if weakKey ~= "k" and weakKey ~= "v" and weakKey ~= "kv" then
         weakKey = "v";
     end
     return setmetatable({}, {__mode = weakKey, __index = objIndex});
 end
-
 function lens4Variable(...) return select('#', ...); end
