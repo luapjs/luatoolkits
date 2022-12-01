@@ -200,6 +200,32 @@ function table.removeListEqualById(tList,obj,times)
     return table.removeListByFunc( tList,lfc_equalId,times,obj )
 end
 
+function table.insertOnly(tList,obj,func)
+    if obj and type(tList) == "table" then
+        local _isHas = false
+        if func then
+            for i = #tList,1,-1 do
+                if func( tList[i],obj ) then
+                    _isHas = true
+                    break;
+                end
+            end
+        end
+        if not _isHas then
+            tb_insert( tList,obj )
+        end
+    end
+    return tList
+end
+
+function table.insertOnlyEqual(tList,obj)
+    return table.insertOnly( tList,obj,lfc_equal )
+end
+
+function table.insertOnlyEqualById(tList,obj)
+    return table.insertOnly( tList,obj,lfc_equalId )
+end
+
 function table.sub(src, nBegin, nEnd)
     local _ret = {};
     for i, v in ipairs(src) do
