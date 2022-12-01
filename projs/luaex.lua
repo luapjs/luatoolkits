@@ -274,19 +274,24 @@ function table.unique(src, bArray)
     return n
 end
 
-local function _deepCopy(src, dest)
-    dest = dest or {}
-    for k, v in pairs(src) do
+local function _copyTableValue( tSrc,tDest )
+    if type(tSrc) ~= "table" then
+        return tSrc
+    end
+    tDest = type(tDest) == "table" and tDest or {}
+    local _oldVal = nil
+    for k, v in pairs( tSrc ) do
         if type(v) == "table" then
-            dest[k] = _deepCopy(v)
+            _oldVal = tDest[k]
+            tDest[k] = _copyTableValue( v,_oldVal )
         else
-            dest[k] = v
+            tDest[k] = v
         end
     end
-    return dest
+    return tDest
 end
 
-function table.deepCopy(src, dest) return _deepCopy(src, dest) end
+function table.copyValue(src, dest) return _copyTableValue(src, dest) end
 
 function table.getSafeArrayValue(array, index)
     index = m_min(#array, m_max(index, 1));

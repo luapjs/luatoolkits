@@ -54,7 +54,7 @@ function test_tab()
     print(table.indexOf(src,"666"),"merge")
     print(table.keyOf(src,"6667"),"keyOf")
     printTable(table.filter(src,function(item) return item ~= 222 end),"filter")
-    printTable(table.deepCopy(src,{["1"]=23}),"deepCopy")
+    printTable(table.copyValue(src,{["1"]=23}),"copyValue")
     --]]
     printTable(src,"src")
     printTable(table.shuffle(src),"suffle")
