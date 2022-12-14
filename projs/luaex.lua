@@ -510,6 +510,19 @@ function string.lastIndexOf(inStr, sep)
     return _posLast or -1;
 end
 
+function string.leftStr(inStr, sep)
+    local _posLast = string.lastIndexOf(inStr, sep)
+    if not _posLast or _posLast == -1 then return inStr; end
+    return str_sub(inStr, 1, _posLast);
+end
+
+function string.rightStr(inStr, sep)
+    local _posLast = string.lastIndexOf(inStr, sep)
+    if not _posLast or _posLast == -1 then return inStr; end
+    local _len = str_len( sep );
+    return str_sub(inStr,_posLast + _len);
+end
+
 function string.lastStr(inStr, sep)
     local _posLast = string.lastIndexOf(inStr, sep)
     if not _posLast or _posLast == -1 then return inStr; end
