@@ -132,15 +132,14 @@ function lfc_equal(val, obj) return val == obj; end
 function lfc_equalId( val,obj )
     local _rt = (val == obj)
     if not _rt then
+        local _id_t,_id_o = val,obj
         if type(val) == "table" then
-            local _id = nil
-            if type(obj) == "table" then
-                _id = obj.id
-            else
-                _id = obj
-            end
-            _rt = tostring(val.id) == tostring(_id);
+            _id_t = val.id
         end
+        if type(obj) == "table" then
+            _id_o = obj.id
+        end
+        _rt = tostring(_id_t) == tostring(_id_o);
     end
     return _rt;
 end
