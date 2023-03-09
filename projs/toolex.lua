@@ -20,7 +20,7 @@ local tb_concat = table.concat
 local str_format = string.format
 local str_gsub = string.gsub
 local str_rep = string.rep
-local str_byte = string.byte
+local str_upper = string.upper
 local tostring = tostring
 
 local package,type,rawget = package,type,rawget
@@ -120,7 +120,7 @@ end
 function sort_key( a,b )
 	a = tostring(a)
 	b = tostring(b)
-	return str_byte(a) < str_byte(b);
+	return str_upper(a) < str_upper(b);
 end
 
 local _pfunc = nil;
@@ -172,10 +172,11 @@ local function _ToCatTable( tb,dest,dic,tabNum,notSort )
 		end
 	end
 	tabNum = tabNum - 1
-
+	tb_insert( dest, "\n" )
 	if tabNum == 0 then
 		tb_insert( dest, '}' )
 	else
+		tb_insert( dest, stab(tabNum) )
 		tb_insert( dest, '},' )
 	end
 end
