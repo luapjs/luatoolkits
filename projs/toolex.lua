@@ -250,6 +250,34 @@ function weakTB( weakKey,objIndex )
 	return setmetatable({},{ __mode = weakKey,__index = objIndex })
 end
 
+function enumClass( enumName,isInt )
+	local _t = _G[enumName] or {}
+	_G[enumName] = _t
+	isInt = isInt == true
+	local _funcInt = nil
+	if (isInt == true) then
+		local _nIndex = 0
+		_funcInt = function()
+			local _ret = _nIndex
+			_nIndex = _nIndex + 1
+			return _ret
+		end
+	end
+
+	setmetatable(_t,{
+		__index = function(t,k)
+			local _v = tostring( k )
+			if (isInt == true) then
+				_v = _funcInt()
+			end
+			rawset( t,k,_v )
+			return _v
+		end,
+		__newindex = _lfNewIndex,
+	});
+	return _t;
+end
+
 function clearLoadLua( luapath )	
 	package.loaded[luapath] = nil
 	package.preload[luapath] = nil
