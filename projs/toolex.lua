@@ -266,10 +266,7 @@ function enumClass( enumName,isInt )
 
 	setmetatable(_t,{
 		__index = function(t,k)
-			local _v = tostring( k )
-			if (isInt == true) then
-				_v = _funcInt()
-			end
+			local _v = (isInt == true) and _funcInt() or tostring( k )
 			rawset( t,k,_v )
 			return _v
 		end,
