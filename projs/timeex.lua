@@ -57,6 +57,13 @@ function M.getDate(sec)
   return this.format(sec,"*t");
 end
 
+-- 获取客户端时区(秒)
+function M.getTimezone(sec)
+  sec = sec or os_time()
+  local utcSec = os_time(os_date("!*t", sec))
+  return os_difftime( sec,utcSec )
+end
+
 -- 零点时间
 function M.getZeroTime( sec )
   local _dt = this.getDate(sec);
