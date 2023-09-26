@@ -158,6 +158,10 @@ local function _copyTableValue(tSrc,tDest)
     if type(tSrc) ~= "table" then
         return tSrc
     end
+    if table.length( tSrc ) == 0 then
+        tDest = tSrc
+        return tDest
+    end
     tDest = type(tDest) == "table" and tDest or {}
     local _oldVal = nil
     for k, v in pairs( tSrc ) do
